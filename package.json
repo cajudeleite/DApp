@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/cajudeleite/DApp/issues"
   },
-  "homepage": "https://github.com/cajudeleite/DApp#readme"
+  "homepage": "https://github.com/cajudeleite/DApp#readme",
+  "devDependencies": {
+    "hardhat": "^2.12.0"
+  }
 }
