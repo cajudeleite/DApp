@@ -21,11 +21,12 @@ contract Bacchus is Ownable {
 
     Event[] internal events;
 
-    mapping(uint256 => address) public eventIdToOwner;
-    mapping(string => uint256) public eventNameToEventId;
+    mapping(uint256 => address) public eventIdToUser;
+    mapping(address => uint256) internal userToEventId;
+    mapping(string => uint256) internal eventNameToEventId;
 
-    modifier onlyOwnerOf(uint256 _eventId) {
-        require(msg.sender == eventIdToOwner[_eventId]);
+    modifier isEventOwner(uint256 _eventId) {
+        require(msg.sender == eventIdToUser[_eventId]);
         _;
     }
 
@@ -46,9 +47,19 @@ contract Bacchus is Ownable {
     ) public {
         events.push(Event(_name, _description, _location, _date, 0, false));
         uint256 id = events.length.sub(1);
-        eventIdToOwner[id] = msg.sender;
+        eventIdToUser[id] = msg.sender;
         eventNameToEventId[_name] = id;
         emit NewEvent(id, _name);
+    }
+
+    constructor() {
+        _createEvent(
+            "First Ever Event",
+            "Hey there, this is an easter egg",
+            "Everywhere",
+            "Anytime"
+        );
+        _closeEvent(0);
     }
 
     function _getEvent(uint256 _eventId)
@@ -86,7 +97,7 @@ contract Bacchus is Ownable {
         return _getEvent(eventNameToEventId[_name]);
     }
 
-    function _closeEvent(uint256 _eventId) public onlyOwnerOf(_eventId) {
+    function _closeEvent(uint256 _eventId) public isEventOwner(_eventId) {
         Event storage myEvent = events[_eventId];
         myEvent.closed = true;
         emit EventClosed(_eventId, myEvent.name);
