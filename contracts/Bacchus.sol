@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.7.0 <0.9.0;
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Bacchus {
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract Bacchus is Ownable {
     using SafeMath for uint256;
 
     event NewEvent(uint256 eventId, string name, string description);
