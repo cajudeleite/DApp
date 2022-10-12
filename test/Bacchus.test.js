@@ -1,16 +1,16 @@
 const { expect } = require("chai");
 
 describe("Bacchus", () => {
-  it("Create and get event", async () => {
+  it("Create event", async () => {
     const BacchusContract = await ethers.getContractFactory("Bacchus");
     const bacchusContract = await BacchusContract.deploy();
 
-    await bacchusContract.deployed();
-
-    const response = await bacchusContract._createEvent("Test", "This is a test", "At my place", "Tomorrow");
-
-    console.log(response);
-
-    expect(await bacchusContract._getEvent(0)).to.have.property("name");
+    await expect(bacchusContract._createEvent("Test", "This is a test", "At my place", "Tomorrow")).to.emit(bacchusContract, "NewEvent").withArgs();
   });
+  // it("Create event", async () => {
+  //   const BacchusContract = await ethers.getContractFactory("Bacchus");
+  //   const bacchusContract = await BacchusContract.deploy();
+
+  //   await expect(bacchusContract._createEvent("Test", "This is a test", "At my place", "Tomorrow")).to.emit(bacchusContract, "NewEvent");
+  // });
 });
