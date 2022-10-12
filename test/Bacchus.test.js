@@ -10,11 +10,8 @@ describe("Bacchus", () => {
   it("Testing if msg.sender is owner", async () => {
     const bacchusContract = await initializeContract();
 
-    const isOwner = await bacchusContract.isOwner();
-    expect(isOwner).to.be.true;
-
-    // const owner = await bacchusContract.owner();
-    // expect(owner).to.eql(bacchusContract.signer.address);
+    const owner = await bacchusContract.owner();
+    expect(owner).to.eql(bacchusContract.signer.address);
   });
 
   it("Testing _createEvent", async () => {
