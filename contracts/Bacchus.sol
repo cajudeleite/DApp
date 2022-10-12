@@ -35,6 +35,16 @@ contract Bacchus is Ownable {
         _;
     }
 
+    modifier userHasNoEvent(address _user) {
+        require(userToEventId[_user] == 0, "User already has an event");
+        _;
+    }
+
+    modifier nameIsValid(string memory _name) {
+        require(eventNameToEventId[_name] == 0, "Name already being used");
+        _;
+    }
+
     function _isClosed(uint256 _eventId) private view returns (bool) {
         return events[_eventId].closed;
     }
@@ -60,6 +70,15 @@ contract Bacchus is Ownable {
             "Anytime"
         );
         _closeEvent(0);
+    }
+
+    function createEvent(
+        string memory _name,
+        string memory _description,
+        string memory _location,
+        string memory _date
+    ) external userHasNoEvent(msg.sender) nameIsValid(_name) {
+        _createEvent(_name, _description, _location, _date);
     }
 
     function _getEvent(uint256 _eventId)

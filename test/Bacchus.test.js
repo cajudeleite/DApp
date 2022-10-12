@@ -7,9 +7,13 @@ const initializeContract = async (contractName) => {
 };
 
 describe("Bacchus", () => {
+  let bacchusContract;
+  beforeEach(async () => {
+    bacchusContract = await initializeContract("Bacchus");
+  });
+
   describe("Testing contract owner:", () => {
     it("Owner", async () => {
-      const bacchusContract = await initializeContract("Bacchus");
       const [owner] = await ethers.getSigners();
 
       const response = await bacchusContract.owner();
@@ -17,7 +21,6 @@ describe("Bacchus", () => {
     });
 
     it("Stranger", async () => {
-      const bacchusContract = await initializeContract("Bacchus");
       const [owner, stranger] = await ethers.getSigners();
 
       const response = await bacchusContract.owner();
@@ -26,15 +29,8 @@ describe("Bacchus", () => {
   });
 
   describe("Testing createEvent:", () => {
-    let bacchusContract;
-    let eventContract;
-    beforeEach(async () => {
-      bacchusContract = await initializeContract("Bacchus");
-      eventContract = await initializeContract("Event");
-    });
-
     it("With the right arguments", async () => {
-      await expect(eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow"))
+      await expect(bacchusContract.createEvent("Test", "This is a test", "At my place", "Tomorrow"))
         .to.emit(bacchusContract, "NewEvent")
         .withArgs(1, "Test");
     });
