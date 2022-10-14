@@ -32,9 +32,12 @@ describe("Bacchus", () => {
 
 describe("Event", () => {
   let eventContract;
+  let stranger;
 
   beforeEach(async () => {
     eventContract = await initializeContract("Event");
+    const [owner, user1] = await ethers.getSigners();
+    stranger = user1;
   });
 
   describe("Testing createEvent:", () => {
@@ -50,10 +53,26 @@ describe("Event", () => {
     });
   });
 
-  it("Testing closeEvent", async () => {
-    await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+  describe("Testing closeEvent:", () => {
+    it("With open event", async () => {
+      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+      await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+    });
 
-    await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+    it("With closed event", async () => {
+      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+      await eventContract.closeEvent(1);
+      await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+    });
+
+    it("With unexisting event", async () => {
+      await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+    });
+
+    it("With stranger", async () => {
+      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+      await expect(stranger.eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+    });
   });
 
   it("Testing getEvent", async () => {
