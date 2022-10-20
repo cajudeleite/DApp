@@ -2,10 +2,15 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./Bacchus.sol";
+import "./Utils.sol";
+import "hardhat/console.sol"; //REFACTO
 
-contract Event is Bacchus {
-    modifier isEventOwner(uint256 _eventId) {
-        require(msg.sender == eventIdToUser[_eventId]);
+contract Event is Bacchus, Utils {
+    modifier isEventOwner(uint256 _eventId, address _user) {
+        require(
+            _user == eventIdToUser[_eventId],
+            "User is not the owner of this event"
+        );
         _;
     }
 
@@ -43,7 +48,7 @@ contract Event is Bacchus {
 
     function closeEvent(uint256 _eventId)
         external
-        isEventOwner(_eventId)
+        isEventOwner(_eventId, msg.sender)
         eventMustBeOpen(_eventId)
     {
         _closeEvent(_eventId);

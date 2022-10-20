@@ -8,9 +8,14 @@ const initializeContract = async (contractName) => {
 
 describe("Bacchus", () => {
   let bacchusContract;
+  let owner;
+  let stranger;
 
   beforeEach(async () => {
     bacchusContract = await initializeContract("Bacchus");
+    const [addr0, addr1] = await ethers.getSigners();
+    owner = addr0;
+    stranger = addr1;
   });
 
   describe("Testing if the contract owner is:", () => {
@@ -22,8 +27,6 @@ describe("Bacchus", () => {
     });
 
     it("Stranger", async () => {
-      const [owner, stranger] = await ethers.getSigners();
-
       const response = await bacchusContract.owner();
       expect(response).not.to.eql(stranger.address);
     });
@@ -36,7 +39,7 @@ describe("Event", () => {
 
   beforeEach(async () => {
     eventContract = await initializeContract("Event");
-    const [owner, user1] = await ethers.getSigners();
+    const [addr0, user1] = await ethers.getSigners();
     stranger = user1;
   });
 
@@ -49,7 +52,7 @@ describe("Event", () => {
 
     it("With a duplicated name", async () => {
       await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
-      await expect(eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow")).to.be.rejected;
+      expect(eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow")).to.be.rejected;
     });
   });
 
@@ -62,28 +65,38 @@ describe("Event", () => {
     it("With closed event", async () => {
       await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
       await eventContract.closeEvent(1);
-      await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+      expect(eventContract.closeEvent(1)).to.be.revertedWith("Event closed");
     });
 
     it("With unexisting event", async () => {
-      await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+      expect(eventContract.closeEvent(1)).to.be.rejected;
     });
 
     it("With stranger", async () => {
       await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
-      await expect(stranger.eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+      expect(eventContract.connect(stranger).closeEvent(1)).to.be.revertedWith("User is not the owner of this event");
     });
   });
 
-  it("Testing getEvent", async () => {
-    await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
-    const open = await eventContract.getEvent(1);
+  describe("Testing getEvent:", () => {
+    it("With an existing event", async () => {
+      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+      const open = await eventContract.getEvent(1);
 
-    expect(open).to.have.length(5);
-    expect(open).to.have.members(["Test", "This is a test", "At my place", "Tomorrow", 0]);
+      expect(open).to.have.length(5);
+      expect(open).to.have.members(["Test", "This is a test", "At my place", "Tomorrow", 0]);
+    });
 
-    await eventContract.closeEvent(1);
-    await expect(eventContract.getEvent(1)).to.be.revertedWith("Event closed");
+    it("With a closed event", async () => {
+      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+      await eventContract.closeEvent(1);
+
+      expect(eventContract.getEvent(1)).to.be.revertedWith("Event closed");
+    });
+
+    it("With an unexisting event", async () => {
+      expect(eventContract.getEvent(1)).to.be.reverted;
+    });
   });
 
   it("Testing searchEvent", async () => {
@@ -95,4 +108,48 @@ describe("Event", () => {
   });
 });
 
-describe("Event", () => {});
+describe("Utils", () => {
+  let utilsContract;
+  const range = [0x30, 0x7a];
+  const invalidCharRange = [
+    [0x3a, 0x40],
+    [0x5b, 0x60],
+  ];
+  const maxLength = 20;
+
+  beforeEach(async () => {
+    utilsContract = await initializeContract("Utils");
+    const [addr0, addr1] = await ethers.getSigners();
+    owner = addr0;
+    stranger = addr1;
+  });
+
+  describe("Testing checkIfStringIsValid with string:", () => {
+    it("Valid", async () => {
+      const response = await utilsContract.checkIfStringIsValid("HelloWorld", range, invalidCharRange, maxLength);
+      expect(response).to.eql([true, "String is valid"]);
+    });
+
+    describe("Out of range:", () => {
+      it("Down", async () => {
+        const response = await utilsContract.checkIfStringIsValid("Hello World", range, invalidCharRange, maxLength);
+        expect(response).to.eql([false, "String is not within range"]);
+      });
+
+      it("Up", async () => {
+        const response = await utilsContract.checkIfStringIsValid("Hello|World", range, invalidCharRange, maxLength);
+        expect(response).to.eql([false, "String is not within range"]);
+      });
+    });
+
+    it("Invalid char", async () => {
+      const response = await utilsContract.checkIfStringIsValid("Hello_World", range, invalidCharRange, maxLength);
+      expect(response).to.eql([false, "String contains invalid character"]);
+    });
+
+    it("Too long", async () => {
+      const response = await utilsContract.checkIfStringIsValid("HelloWorldaaaaaaaaaaaaqaaaa", range, invalidCharRange, maxLength);
+      expect(response).to.eql([false, "String exceeds the max length"]);
+    });
+  });
+});
