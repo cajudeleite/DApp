@@ -60,35 +60,11 @@ describe("Event", () => {
     });
   });
 
-  describe("Testing closeEvent", () => {
-    describe("With event:", () => {
-      it("Open", async () => {
-        await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
-        await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
-      });
-
-      it("Closed", async () => {
-        await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
-        await eventContract.closeEvent(1);
-        await expect(eventContract.closeEvent(1)).to.be.revertedWith("Event is closed");
-      });
-
-      it("Unexisting", async () => {
-        await expect(eventContract.closeEvent(1)).to.be.revertedWith("Event does not exist");
-      });
-    });
-
-    it("With stranger", async () => {
-      await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
-      await expect(eventContract.connect(stranger).closeEvent(1)).to.be.revertedWith("User is not the owner of this event");
-    });
-  });
-
   describe("Testing getEvent with event:", () => {
-    it("Open", async () => {
-      const createdAt = Date.now();
+    const createdAt = Date.now();
+    beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
 
-      await eventContract.createEvent("Test", "This is a test", "At my place", createdAt);
+    it("Open", async () => {
       const response = await eventContract.getEvent(1);
 
       expect(response).to.have.length(5);
@@ -100,23 +76,20 @@ describe("Event", () => {
     });
 
     it("Closed", async () => {
-      await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
       await eventContract.closeEvent(1);
-
       await expect(eventContract.getEvent(1)).to.be.revertedWith("Event is closed");
     });
 
     it("Unexisting", async () => {
-      await expect(eventContract.getEvent(1)).to.be.revertedWith("Event does not exist");
+      await expect(eventContract.getEvent(2)).to.be.revertedWith("Event does not exist");
     });
   });
 
   describe("Testing searchEvent", () => {
-    const createdAt = Date.now();
-
-    beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
-
     describe("With event:", () => {
+      const createdAt = Date.now();
+      beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
+
       it("Open", async () => {
         const response = await eventContract.searchEvent("Test");
 
@@ -156,6 +129,31 @@ describe("Event", () => {
       it("Too long", async () => {
         await expect(eventContract.searchEvent("OmgThisNameIsSoLongThatItWontPass")).to.be.revertedWith("String exceeds the max length");
       });
+    });
+  });
+
+  describe("Testing updateEvent", () => {});
+
+  describe("Testing closeEvent", () => {
+    beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", Date.now()));
+
+    describe("With event:", () => {
+      it("Open", async () => {
+        await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+      });
+
+      it("Closed", async () => {
+        await eventContract.closeEvent(1);
+        await expect(eventContract.closeEvent(1)).to.be.revertedWith("Event is closed");
+      });
+
+      it("Unexisting", async () => {
+        await expect(eventContract.closeEvent(2)).to.be.revertedWith("Event does not exist");
+      });
+    });
+
+    it("With stranger", async () => {
+      await expect(eventContract.connect(stranger).closeEvent(1)).to.be.revertedWith("User is not the owner of this event");
     });
   });
 });
