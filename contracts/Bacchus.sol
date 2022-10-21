@@ -22,7 +22,7 @@ contract Bacchus is Ownable {
         string name;
         string description;
         string location;
-        string date;
+        uint256 date;
         uint16 reputation;
         bool closed;
     }
@@ -38,7 +38,7 @@ contract Bacchus is Ownable {
             "First Ever Event",
             "Hey there, this is an easter egg",
             "Everywhere",
-            "Anytime"
+            block.timestamp
         );
         _closeEvent(0);
     }
@@ -47,11 +47,12 @@ contract Bacchus is Ownable {
         string memory _name,
         string memory _description,
         string memory _location,
-        string memory _date
+        uint256 _date
     ) internal {
         events.push(Event(_name, _description, _location, _date, 0, false));
         uint256 id = events.length.sub(1);
         eventIdToUser[id] = msg.sender;
+        userToEventId[msg.sender] = id;
         eventNameToEventId[_name] = id;
         emit NewEvent(id, _name);
     }
@@ -63,7 +64,7 @@ contract Bacchus is Ownable {
             string memory,
             string memory,
             string memory,
-            string memory,
+            uint256,
             uint16
         )
     {
