@@ -54,7 +54,7 @@ describe("Event", () => {
       it("Duplicated", async () => {
         await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
         await expect(eventContract.connect(stranger).createEvent("Test", "This is a test", "At my place", Date.now())).to.be.revertedWith(
-          "Name already being used"
+          "Event already exists"
         );
       });
     });

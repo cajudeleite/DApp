@@ -19,8 +19,16 @@ contract Event is Bacchus, Utils {
         _;
     }
 
-    modifier eventExists(uint256 _eventId) {
-        require(checkIfEventExists(_eventId), "Event does not exist");
+    modifier eventExists(uint256 _eventId, bool _exists) {
+        string memory message;
+
+        if (_exists) {
+            message = "Event does not exist";
+        } else {
+            message = "Event already exists";
+        }
+
+        require((_eventId > 0 && _eventId < events.length) == _exists, message);
         _;
     }
 
@@ -44,27 +52,24 @@ contract Event is Bacchus, Utils {
         _;
     }
 
-    function checkIfEventExists(uint256 _eventId) private view returns (bool) {
-        return _eventId > 0 && _eventId < events.length;
-    }
-
     function createEvent(
         string memory _name,
         string memory _description,
         string memory _location,
         uint256 _date
-    ) external userHasNoEvent(msg.sender) nameIsValid(_name) {
-        require(
-            !checkIfEventExists(eventNameToEventId[_name]),
-            "Name already being used"
-        );
+    )
+        external
+        eventExists(eventNameToEventId[_name], false)
+        userHasNoEvent(msg.sender)
+        nameIsValid(_name)
+    {
         _createEvent(_name, _description, _location, _date);
     }
 
     function getEvent(uint256 _eventId)
         external
         view
-        eventExists(_eventId)
+        eventExists(_eventId, true)
         eventIsOpen(_eventId)
         returns (
             string memory,
@@ -81,7 +86,7 @@ contract Event is Bacchus, Utils {
         external
         view
         nameIsValid(_name)
-        eventExists(eventNameToEventId[_name])
+        eventExists(eventNameToEventId[_name], true)
         eventIsOpen(eventNameToEventId[_name])
         returns (
             string memory,
@@ -96,7 +101,7 @@ contract Event is Bacchus, Utils {
 
     function updateEvent(uint256 _eventId, string memory _name)
         external
-        eventExists(_eventId, false)
+        eventExists(_eventId, true)
         eventIsOpen(_eventId)
         isEventOwner(_eventId, msg.sender)
         nameIsValid(_name)
@@ -104,7 +109,7 @@ contract Event is Bacchus, Utils {
 
     function closeEvent(uint256 _eventId)
         external
-        eventExists(_eventId)
+        eventExists(_eventId, true)
         eventIsOpen(_eventId)
         isEventOwner(_eventId, msg.sender)
     {
