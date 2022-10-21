@@ -51,20 +51,22 @@ describe("Event", () => {
     });
   });
 
-  describe("Testing closeEvent:", () => {
-    it("With open event", async () => {
-      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
-      await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
-    });
+  describe("Testing closeEvent", () => {
+    describe("With event:", () => {
+      it("Open", async () => {
+        await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+        await expect(eventContract.closeEvent(1)).to.emit(eventContract, "EventClosed").withArgs(1, "Test");
+      });
 
-    it("With closed event", async () => {
-      await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
-      await eventContract.closeEvent(1);
-      await expect(eventContract.closeEvent(1)).to.be.revertedWith("Event closed");
-    });
+      it("Closed", async () => {
+        await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
+        await eventContract.closeEvent(1);
+        await expect(eventContract.closeEvent(1)).to.be.revertedWith("Event is closed");
+      });
 
-    it("With unexisting event", async () => {
-      await expect(eventContract.closeEvent(1)).to.be.reverted;
+      it("Unexisting", async () => {
+        await expect(eventContract.closeEvent(1)).to.be.revertedWith("Event does not exist");
+      });
     });
 
     it("With stranger", async () => {
@@ -73,8 +75,8 @@ describe("Event", () => {
     });
   });
 
-  describe("Testing getEvent:", () => {
-    it("With an existing event", async () => {
+  describe("Testing getEvent with event:", () => {
+    it("Open", async () => {
       await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
       const open = await eventContract.getEvent(1);
 
@@ -82,23 +84,57 @@ describe("Event", () => {
       expect(open).to.have.members(["Test", "This is a test", "At my place", "Tomorrow", 0]);
     });
 
-    it("With a closed event", async () => {
+    it("Closed", async () => {
       await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
       await eventContract.closeEvent(1);
 
-      await expect(eventContract.getEvent(1)).to.be.revertedWith("Event closed");
+      await expect(eventContract.getEvent(1)).to.be.revertedWith("Event is closed");
     });
 
-    it("With an unexisting event", async () => {
-      await expect(eventContract.getEvent(1)).to.be.reverted;
+    it("Unexisting", async () => {
+      await expect(eventContract.getEvent(1)).to.be.revertedWith("Event does not exist");
     });
   });
 
-  it("Testing searchEvent", async () => {
-    await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow");
-    const response = await eventContract.searchEvent("Test");
+  describe("Testing searchEvent", () => {
+    beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", "Tomorrow"));
 
-    expect(response).to.have.length(5);
-    expect(response).to.have.members(["Test", "This is a test", "At my place", "Tomorrow", 0]);
+    describe("With event:", () => {
+      it("Open", async () => {
+        const response = await eventContract.searchEvent("Test");
+
+        expect(response).to.have.length(5);
+        expect(response).to.have.members(["Test", "This is a test", "At my place", "Tomorrow", 0]);
+      });
+
+      it("Closed", async () => {
+        await eventContract.closeEvent(1);
+        await expect(eventContract.searchEvent("Test")).to.be.revertedWith("Event is closed");
+      });
+
+      it("Unexisting", async () => {
+        await expect(eventContract.searchEvent("NotTest")).to.be.revertedWith("Event does not exist");
+      });
+    });
+
+    describe("With name:", () => {
+      describe("Out of range:", () => {
+        it("Up", async () => {
+          await expect(eventContract.searchEvent("Te|st")).to.be.revertedWith("String is not within range");
+        });
+
+        it("Down", async () => {
+          await expect(eventContract.searchEvent("Te st")).to.be.revertedWith("String is not within range");
+        });
+      });
+
+      it("Invalid char", async () => {
+        await expect(eventContract.searchEvent("Te_st")).to.be.revertedWith("String contains invalid character");
+      });
+
+      it("Too long", async () => {
+        await expect(eventContract.searchEvent("OmgThisNameIsSoLongThatItWontPass")).to.be.revertedWith("String exceeds the max length");
+      });
+    });
   });
 });
