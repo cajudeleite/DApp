@@ -19,8 +19,13 @@ contract Event is Bacchus, Utils {
         _;
     }
 
-    modifier eventMustBeOpen(uint256 _eventId) {
-        require(!_isClosed(_eventId), "Event closed");
+    modifier eventExists(uint256 _eventId) {
+        require(checkIfEventExists(_eventId), "Event does not exist");
+        _;
+    }
+
+    modifier eventIsOpen(uint256 _eventId) {
+        require(!events[_eventId].closed, "Event is closed");
         _;
     }
 
@@ -36,36 +41,36 @@ contract Event is Bacchus, Utils {
         );
 
         require(valid, message);
-        require(!_nameIdBeingUsed(_name), "Name already being used");
         _;
     }
 
-    function _isClosed(uint256 _eventId) private view returns (bool) {
-        return events[_eventId].closed;
-    }
-
-    function _nameIdBeingUsed(string memory _name) private view returns (bool) {
-        return eventNameToEventId[_name] != 0;
+    function checkIfEventExists(uint256 _eventId) private view returns (bool) {
+        return _eventId > 0 && _eventId < events.length;
     }
 
     function createEvent(
         string memory _name,
         string memory _description,
         string memory _location,
-        string memory _date
+        uint256 _date
     ) external userHasNoEvent(msg.sender) nameIsValid(_name) {
+        require(
+            !checkIfEventExists(eventNameToEventId[_name]),
+            "Name already being used"
+        );
         _createEvent(_name, _description, _location, _date);
     }
 
     function getEvent(uint256 _eventId)
         external
         view
-        eventMustBeOpen(_eventId)
+        eventExists(_eventId)
+        eventIsOpen(_eventId)
         returns (
             string memory,
             string memory,
             string memory,
-            string memory,
+            uint256,
             uint16
         )
     {
@@ -75,11 +80,14 @@ contract Event is Bacchus, Utils {
     function searchEvent(string memory _name)
         external
         view
+        nameIsValid(_name)
+        eventExists(eventNameToEventId[_name])
+        eventIsOpen(eventNameToEventId[_name])
         returns (
             string memory,
             string memory,
             string memory,
-            string memory,
+            uint256,
             uint16
         )
     {
@@ -96,8 +104,9 @@ contract Event is Bacchus, Utils {
 
     function closeEvent(uint256 _eventId)
         external
+        eventExists(_eventId)
+        eventIsOpen(_eventId)
         isEventOwner(_eventId, msg.sender)
-        eventMustBeOpen(_eventId)
     {
         _closeEvent(_eventId);
     }
