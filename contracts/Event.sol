@@ -28,7 +28,7 @@ contract Event is Bacchus, Utils {
             message = "Event already exists";
         }
 
-        require((_eventId > 0 && _eventId < events.length) == _exists, message);
+        require(checkIfEventExists(_eventId) == _exists, message);
         _;
     }
 
@@ -50,6 +50,10 @@ contract Event is Bacchus, Utils {
 
         require(valid, message);
         _;
+    }
+
+    function checkIfEventExists(uint256 _eventId) private view returns (bool) {
+        return _eventId > 0 && _eventId < events.length;
     }
 
     function createEvent(
@@ -99,13 +103,42 @@ contract Event is Bacchus, Utils {
         return _getEvent(eventNameToEventId[_name]);
     }
 
-    function updateEvent(uint256 _eventId, string memory _name)
+    function updateEvent(
+        uint256 _eventId,
+        string memory _name,
+        string memory _description,
+        string memory _location,
+        uint256 _date
+    )
         external
         eventExists(_eventId, true)
         eventIsOpen(_eventId)
         isEventOwner(_eventId, msg.sender)
         nameIsValid(_name)
-    {}
+    {
+        if (
+            keccak256(abi.encodePacked(events[_eventId].name)) !=
+            keccak256(abi.encodePacked(_name))
+        ) {
+            require(!checkIfEventExists(_eventId), "Event already exists");
+            _updateName(_eventId, _name);
+        }
+        if (
+            keccak256(abi.encodePacked(events[_eventId].description)) !=
+            keccak256(abi.encodePacked(_description))
+        ) {
+            _updateDescription(_eventId, _description);
+        }
+        if (
+            keccak256(abi.encodePacked(events[_eventId].location)) !=
+            keccak256(abi.encodePacked(_location))
+        ) {
+            _updateLocation(_eventId, _location);
+        }
+        if (events[_eventId].date != _date) {
+            _updateDate(_eventId, _date);
+        }
+    }
 
     function closeEvent(uint256 _eventId)
         external

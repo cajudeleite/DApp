@@ -9,6 +9,7 @@ contract Bacchus is Ownable {
     using SafeMath for uint256;
 
     event NewEvent(uint256 eventId, string name);
+    event EventUpdated(uint256 eventId, string field);
     event EventClosed(uint256 eventId, string name);
 
     bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
@@ -79,22 +80,26 @@ contract Bacchus is Ownable {
 
     function _updateName(uint256 _eventId, string memory _newValue) internal {
         events[_eventId].name = _newValue;
+        emit EventUpdated(_eventId, "Name");
     }
 
     function _updateDescription(uint256 _eventId, string memory _newValue)
         internal
     {
         events[_eventId].description = _newValue;
+        emit EventUpdated(_eventId, "Description");
     }
 
     function _updateLocation(uint256 _eventId, string memory _newValue)
         internal
     {
         events[_eventId].location = _newValue;
+        emit EventUpdated(_eventId, "Location");
     }
 
     function _updateDate(uint256 _eventId, uint256 _newValue) internal {
         events[_eventId].date = _newValue;
+        emit EventUpdated(_eventId, "Date");
     }
 
     function _closeEvent(uint256 _eventId) internal {
