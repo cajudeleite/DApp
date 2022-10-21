@@ -77,6 +77,26 @@ contract Bacchus is Ownable {
         );
     }
 
+    function _updateName(uint256 _eventId, string memory _newValue) internal {
+        events[_eventId].name = _newValue;
+    }
+
+    function _updateDescription(uint256 _eventId, string memory _newValue)
+        internal
+    {
+        events[_eventId].description = _newValue;
+    }
+
+    function _updateLocation(uint256 _eventId, string memory _newValue)
+        internal
+    {
+        events[_eventId].location = _newValue;
+    }
+
+    function _updateDate(uint256 _eventId, uint256 _newValue) internal {
+        events[_eventId].date = _newValue;
+    }
+
     function _closeEvent(uint256 _eventId) internal {
         Event storage myEvent = events[_eventId];
         myEvent.closed = true;
