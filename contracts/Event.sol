@@ -25,6 +25,17 @@ contract Event is Bacchus, Utils {
     }
 
     modifier nameIsValid(string memory _name) {
+        bool valid;
+        string memory message;
+
+        (valid, message) = checkIfStringIsValid(
+            _name,
+            nameValidRange,
+            nameInvalidRange,
+            nameMaxLength
+        );
+
+        require(valid, message);
         require(!_nameIdBeingUsed(_name), "Name already being used");
         _;
     }

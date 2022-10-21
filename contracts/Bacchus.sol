@@ -11,6 +11,13 @@ contract Bacchus is Ownable {
     event NewEvent(uint256 eventId, string name);
     event EventClosed(uint256 eventId, string name);
 
+    bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
+    bytes1[2][] nameInvalidRange = [
+        [bytes1(0x3a), bytes1(0x40)],
+        [bytes1(0x5b), bytes1(0x60)]
+    ];
+    uint8 nameMaxLength = 20;
+
     struct Event {
         string name;
         string description;
