@@ -57,14 +57,6 @@ contract Event is Bacchus, Utils {
         _createEvent(_name, _description, _location, _date);
     }
 
-    function closeEvent(uint256 _eventId)
-        external
-        isEventOwner(_eventId, msg.sender)
-        eventMustBeOpen(_eventId)
-    {
-        _closeEvent(_eventId);
-    }
-
     function getEvent(uint256 _eventId)
         external
         view
@@ -92,5 +84,21 @@ contract Event is Bacchus, Utils {
         )
     {
         return _getEvent(eventNameToEventId[_name]);
+    }
+
+    function updateEvent(uint256 _eventId, string memory _name)
+        external
+        eventExists(_eventId, false)
+        eventIsOpen(_eventId)
+        isEventOwner(_eventId, msg.sender)
+        nameIsValid(_name)
+    {}
+
+    function closeEvent(uint256 _eventId)
+        external
+        isEventOwner(_eventId, msg.sender)
+        eventMustBeOpen(_eventId)
+    {
+        _closeEvent(_eventId);
     }
 }
