@@ -3,12 +3,20 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol"; //REFACTO
 
 contract Bacchus is Ownable {
     using SafeMath for uint256;
 
     event NewEvent(uint256 eventId, string name);
     event EventClosed(uint256 eventId, string name);
+
+    bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
+    bytes1[2][] nameInvalidRange = [
+        [bytes1(0x3a), bytes1(0x40)],
+        [bytes1(0x5b), bytes1(0x60)]
+    ];
+    uint8 nameMaxLength = 20;
 
     struct Event {
         string name;
@@ -21,21 +29,18 @@ contract Bacchus is Ownable {
 
     Event[] internal events;
 
-    mapping(uint256 => address) public eventIdToOwner;
-    mapping(string => uint256) public eventNameToEventId;
+    mapping(uint256 => address) public eventIdToUser;
+    mapping(address => uint256) internal userToEventId;
+    mapping(string => uint256) internal eventNameToEventId;
 
-    modifier onlyOwnerOf(uint256 _eventId) {
-        require(msg.sender == eventIdToOwner[_eventId]);
-        _;
-    }
-
-    modifier eventMustBeOpen(uint256 _eventId) {
-        require(!_isClosed(_eventId), "Event closed");
-        _;
-    }
-
-    function _isClosed(uint256 _eventId) private view returns (bool) {
-        return events[_eventId].closed;
+    constructor() {
+        _createEvent(
+            "First Ever Event",
+            "Hey there, this is an easter egg",
+            "Everywhere",
+            "Anytime"
+        );
+        _closeEvent(0);
     }
 
     function _createEvent(
@@ -43,18 +48,17 @@ contract Bacchus is Ownable {
         string memory _description,
         string memory _location,
         string memory _date
-    ) public {
+    ) internal {
         events.push(Event(_name, _description, _location, _date, 0, false));
         uint256 id = events.length.sub(1);
-        eventIdToOwner[id] = msg.sender;
+        eventIdToUser[id] = msg.sender;
         eventNameToEventId[_name] = id;
         emit NewEvent(id, _name);
     }
 
     function _getEvent(uint256 _eventId)
-        public
+        internal
         view
-        eventMustBeOpen(_eventId)
         returns (
             string memory,
             string memory,
@@ -72,21 +76,7 @@ contract Bacchus is Ownable {
         );
     }
 
-    function _searchEvent(string memory _name)
-        external
-        view
-        returns (
-            string memory,
-            string memory,
-            string memory,
-            string memory,
-            uint16
-        )
-    {
-        return _getEvent(eventNameToEventId[_name]);
-    }
-
-    function _closeEvent(uint256 _eventId) public onlyOwnerOf(_eventId) {
+    function _closeEvent(uint256 _eventId) internal {
         Event storage myEvent = events[_eventId];
         myEvent.closed = true;
         emit EventClosed(_eventId, myEvent.name);
