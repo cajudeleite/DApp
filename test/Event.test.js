@@ -46,14 +46,16 @@ describe("Event", () => {
 
       it("When user already has an event", async () => {
         await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
-        await expect(eventContract.createEvent("Another test", "This is a test", "At my place", Date.now())).to.be.revertedWith(
+        await expect(eventContract.createEvent("AnotherTest", "This is a test", "At my place", Date.now())).to.be.revertedWith(
           "User already has an event"
         );
       });
 
       it("Duplicated", async () => {
         await eventContract.createEvent("Test", "This is a test", "At my place", Date.now());
-        await expect(eventContract.createEvent("Test", "This is a test", "At my place", Date.now())).to.be.revertedWith("Name already being used");
+        await expect(eventContract.connect(stranger).createEvent("Test", "This is a test", "At my place", Date.now())).to.be.revertedWith(
+          "Name already being used"
+        );
       });
     });
   });

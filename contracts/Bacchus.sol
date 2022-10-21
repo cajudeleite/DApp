@@ -52,6 +52,7 @@ contract Bacchus is Ownable {
         events.push(Event(_name, _description, _location, _date, 0, false));
         uint256 id = events.length.sub(1);
         eventIdToUser[id] = msg.sender;
+        userToEventId[msg.sender] = id;
         eventNameToEventId[_name] = id;
         emit NewEvent(id, _name);
     }
