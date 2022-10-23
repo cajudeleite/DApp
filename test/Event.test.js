@@ -11,12 +11,11 @@ describe("Event", () => {
     stranger = user1;
   });
 
-  describe("Testing createEvent", () => {
-    it("With the right arguments", async () => {
-      await expect(eventContract.createEvent("Bro", "This is a test", "At my place", Date.now()))
+  describe("\nTesting createEvent", () => {
+    it("With the right arguments", async () =>
+      await expect(eventContract.createEvent("Test", "This is a test", "At my place", Date.now()))
         .to.emit(eventContract, "NewEvent")
-        .withArgs(1, "Bro");
-    });
+        .withArgs(1, "Test"));
     describe("With name:", () => {
       describe("Out of range:", () => {
         it("Up", async () => {
@@ -60,7 +59,7 @@ describe("Event", () => {
     });
   });
 
-  describe("Testing getEvent with event:", () => {
+  describe("\nTesting getEvent with event:", () => {
     const createdAt = Date.now();
     beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
 
@@ -85,7 +84,7 @@ describe("Event", () => {
     });
   });
 
-  describe("Testing searchEvent", () => {
+  describe("\nTesting searchEvent", () => {
     describe("With event:", () => {
       const createdAt = Date.now();
       beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
@@ -132,9 +131,87 @@ describe("Event", () => {
     });
   });
 
-  describe("Testing updateEvent", () => {});
+  describe("\nTesting updateEvent", () => {
+    const createdAt = Date.now();
 
-  describe("Testing closeEvent", () => {
+    beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
+
+    describe("Changing all fields and emit:", () => {
+      it("Name", async () =>
+        await expect(eventContract.updateEvent(1, "Another", "This is another description", "At another place", Date.now()))
+          .to.emit(eventContract, "EventUpdated")
+          .withArgs(1, "Name"));
+
+      it("Description", async () =>
+        await expect(eventContract.updateEvent(1, "Another", "This is another description", "At another place", Date.now()))
+          .to.emit(eventContract, "EventUpdated")
+          .withArgs(1, "Description"));
+
+      it("Location", async () =>
+        await expect(eventContract.updateEvent(1, "Another", "This is another description", "At another place", Date.now()))
+          .to.emit(eventContract, "EventUpdated")
+          .withArgs(1, "Location"));
+
+      it("Date", async () =>
+        await expect(eventContract.updateEvent(1, "Another", "This is another description", "At another place", Date.now()))
+          .to.emit(eventContract, "EventUpdated")
+          .withArgs(1, "Date"));
+    });
+
+    it("Changing any field", async () => {
+      await expect(eventContract.updateEvent(1, "Test", "This is a test", "At my place", createdAt)).not.to.emit(eventContract, "EventUpdated");
+    });
+
+    describe("With name:", () => {
+      describe("Out of range:", () => {
+        it("Up", async () =>
+          await expect(eventContract.updateEvent(1, "Another|Test", "This is a test", "At my place", createdAt)).to.revertedWith(
+            "String is not within range"
+          ));
+
+        it("Down", async () =>
+          await expect(eventContract.updateEvent(1, "Another Test", "This is a test", "At my place", createdAt)).to.revertedWith(
+            "String is not within range"
+          ));
+      });
+
+      it("Invalid char", async () =>
+        await expect(eventContract.updateEvent(1, "Another_Test", "This is a test", "At my place", createdAt)).to.revertedWith(
+          "String contains invalid character"
+        ));
+
+      it("Too long", async () =>
+        await expect(eventContract.updateEvent(1, "OmgThisNameIsSoLongThatItWontPass", "This is a test", "At my place", createdAt)).to.revertedWith(
+          "String exceeds the max length"
+        ));
+
+      it("Duplicated", async () => {
+        await eventContract.connect(stranger).createEvent("AnotherTest", "This is a test", "At my place", createdAt);
+        await expect(eventContract.updateEvent(1, "AnotherTest", "This is a test", "At my place", createdAt)).to.revertedWith("Event already exists");
+      });
+    });
+
+    it("With closed event", async () => {
+      await eventContract.closeEvent(1);
+      await expect(eventContract.connect(stranger).updateEvent(1, "AnotherTest", "This is a test", "At my place", createdAt)).to.be.revertedWith(
+        "Event is closed"
+      );
+    });
+
+    it("With unexisting event", async () => {
+      await expect(eventContract.connect(stranger).updateEvent(2, "AnotherTest", "This is a test", "At my place", createdAt)).to.be.revertedWith(
+        "Event does not exist"
+      );
+    });
+
+    it("With stranger", async () => {
+      await expect(eventContract.connect(stranger).updateEvent(1, "OnceAnotherTest", "This is a test", "At my place", createdAt)).to.be.revertedWith(
+        "User is not the owner of this event"
+      );
+    });
+  });
+
+  describe("\nTesting closeEvent", () => {
     beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", Date.now()));
 
     describe("With event:", () => {

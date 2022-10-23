@@ -13,7 +13,7 @@ describe("Bacchus", () => {
     stranger = addr1;
   });
 
-  describe("Testing if the contract owner is:", () => {
+  describe("\nTesting if the contract owner is:", () => {
     it("Owner", async () => {
       const [owner] = await ethers.getSigners();
 

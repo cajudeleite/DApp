@@ -120,7 +120,10 @@ contract Event is Bacchus, Utils {
             keccak256(abi.encodePacked(events[_eventId].name)) !=
             keccak256(abi.encodePacked(_name))
         ) {
-            require(!checkIfEventExists(_eventId), "Event already exists");
+            require(
+                !checkIfEventExists(eventNameToEventId[_name]),
+                "Event already exists"
+            );
             _updateName(_eventId, _name);
         }
         if (

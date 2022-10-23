@@ -17,7 +17,7 @@ describe("Utils", () => {
     stranger = addr1;
   });
 
-  describe("Testing checkIfStringIsValid with string:", () => {
+  describe("\nTesting checkIfStringIsValid with string:", () => {
     it("Valid", async () => {
       const response = await utilsContract.checkIfStringIsValid("HelloWorld", range, invalidCharRange, maxLength);
       expect(response).to.eql([true, "String is valid"]);
