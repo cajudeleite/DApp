@@ -19,8 +19,16 @@ contract Event is Bacchus, Utils {
         _;
     }
 
-    modifier eventExists(uint256 _eventId) {
-        require(checkIfEventExists(_eventId), "Event does not exist");
+    modifier eventExists(uint256 _eventId, bool _exists) {
+        string memory message;
+
+        if (_exists) {
+            message = "Event does not exist";
+        } else {
+            message = "Event already exists";
+        }
+
+        require(checkIfEventExists(_eventId) == _exists, message);
         _;
     }
 
@@ -53,27 +61,23 @@ contract Event is Bacchus, Utils {
         string memory _description,
         string memory _location,
         uint256 _date
-    ) external userHasNoEvent(msg.sender) nameIsValid(_name) {
-        require(
-            !checkIfEventExists(eventNameToEventId[_name]),
-            "Name already being used"
-        );
+    )
+        external
+        eventExists(eventNameToEventId[_name], false)
+        userHasNoEvent(msg.sender)
+        nameIsValid(_name)
+    {
         _createEvent(_name, _description, _location, _date);
     }
 
-    function closeEvent(uint256 _eventId)
-        external
-        eventExists(_eventId)
-        eventIsOpen(_eventId)
-        isEventOwner(_eventId, msg.sender)
-    {
-        _closeEvent(_eventId);
+    function getEvents() external view returns (Event[] memory) {
+        return _getEvents();
     }
 
     function getEvent(uint256 _eventId)
         external
         view
-        eventExists(_eventId)
+        eventExists(_eventId, true)
         eventIsOpen(_eventId)
         returns (
             string memory,
@@ -90,7 +94,7 @@ contract Event is Bacchus, Utils {
         external
         view
         nameIsValid(_name)
-        eventExists(eventNameToEventId[_name])
+        eventExists(eventNameToEventId[_name], true)
         eventIsOpen(eventNameToEventId[_name])
         returns (
             string memory,
@@ -101,5 +105,54 @@ contract Event is Bacchus, Utils {
         )
     {
         return _getEvent(eventNameToEventId[_name]);
+    }
+
+    function updateEvent(
+        uint256 _eventId,
+        string memory _name,
+        string memory _description,
+        string memory _location,
+        uint256 _date
+    )
+        external
+        eventExists(_eventId, true)
+        eventIsOpen(_eventId)
+        isEventOwner(_eventId, msg.sender)
+        nameIsValid(_name)
+    {
+        if (
+            keccak256(abi.encodePacked(events[_eventId].name)) !=
+            keccak256(abi.encodePacked(_name))
+        ) {
+            require(
+                !checkIfEventExists(eventNameToEventId[_name]),
+                "Event already exists"
+            );
+            _updateName(_eventId, _name);
+        }
+        if (
+            keccak256(abi.encodePacked(events[_eventId].description)) !=
+            keccak256(abi.encodePacked(_description))
+        ) {
+            _updateDescription(_eventId, _description);
+        }
+        if (
+            keccak256(abi.encodePacked(events[_eventId].location)) !=
+            keccak256(abi.encodePacked(_location))
+        ) {
+            _updateLocation(_eventId, _location);
+        }
+        if (events[_eventId].date != _date) {
+            _updateDate(_eventId, _date);
+        }
+    }
+
+    function closeEvent(uint256 _eventId)
+        external
+        eventExists(_eventId, true)
+        eventIsOpen(_eventId)
+        isEventOwner(_eventId, msg.sender)
+    {
+        _closeEvent(_eventId);
     }
 }
