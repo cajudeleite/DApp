@@ -59,6 +59,22 @@ describe("Event", () => {
     });
   });
 
+  it("\nTesting getEvents", async () => {
+    const createdAt = Date.now();
+
+    await eventContract.createEvent("Test", "This is a test", "At my place", createdAt);
+    const filteredResponse = await eventContract.getEvents();
+    const event = filteredResponse[0];
+
+    expect(filteredResponse).to.have.lengthOf(1);
+    expect(event[0]).to.eql("Test");
+    expect(event[1]).to.eql("This is a test");
+    expect(event[2]).to.eql("At my place");
+    expect(event[3].toNumber()).to.equal(createdAt);
+    expect(event[4]).to.eql(0);
+    expect(event[5]).to.eql(false);
+  });
+
   describe("\nTesting getEvent with event:", () => {
     const createdAt = Date.now();
     beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));

@@ -29,6 +29,7 @@ contract Bacchus is Ownable {
     }
 
     Event[] internal events;
+    uint256 public eventCount;
 
     mapping(uint256 => address) public eventIdToUser;
     mapping(address => uint256) internal userToEventId;
@@ -51,11 +52,25 @@ contract Bacchus is Ownable {
         uint256 _date
     ) internal {
         events.push(Event(_name, _description, _location, _date, 0, false));
+        eventCount++;
         uint256 id = events.length.sub(1);
         eventIdToUser[id] = msg.sender;
         userToEventId[msg.sender] = id;
         eventNameToEventId[_name] = id;
         emit NewEvent(id, _name);
+    }
+
+    function _getEvents() public view returns (Event[] memory nameArray) {
+        nameArray = new Event[](eventCount);
+        uint256 index;
+
+        for (uint256 i = 0; i < events.length; i++) {
+            Event memory iEvent = events[i];
+            if (!iEvent.closed) {
+                nameArray[index] = iEvent;
+                index++;
+            }
+        }
     }
 
     function _getEvent(uint256 _eventId)
@@ -105,6 +120,7 @@ contract Bacchus is Ownable {
     function _closeEvent(uint256 _eventId) internal {
         Event storage myEvent = events[_eventId];
         myEvent.closed = true;
+        eventCount--;
         emit EventClosed(_eventId, myEvent.name);
     }
 }
