@@ -1,25 +1,29 @@
 const { expect } = require("chai");
+const { initializeContract } = require("./Solidity");
 
 describe("Bacchus", () => {
-  it("Testing _createEvent", async () => {
-    const BacchusContract = await ethers.getContractFactory("Bacchus");
-    const bacchusContract = await BacchusContract.deploy();
+  let bacchusContract;
+  let owner;
+  let stranger;
 
-    await expect(bacchusContract._createEvent("Test", "This is a test", "At my place", "Tomorrow"))
-      .to.emit(bacchusContract, "NewEvent")
-      .withArgs(0, "Test", "This is a test");
+  beforeEach(async () => {
+    bacchusContract = await initializeContract("Bacchus");
+    const [addr0, addr1] = await ethers.getSigners();
+    owner = addr0;
+    stranger = addr1;
   });
-  it("Testing _getEvent", async () => {
-    const BacchusContract = await ethers.getContractFactory("Bacchus");
-    const bacchusContract = await BacchusContract.deploy();
 
-    await bacchusContract._createEvent("Test", "This is a test", "At my place", "Tomorrow");
-    const response = await bacchusContract._getEvent(0);
+  describe("\nTesting if the contract owner is:", () => {
+    it("Owner", async () => {
+      const [owner] = await ethers.getSigners();
 
-    expect(response).not.to.be.undefined;
-    expect(response).to.have.property("name", "Test");
-    expect(response).to.have.property("description", "This is a test");
-    expect(response).to.have.property("location", "At my place");
-    expect(response).to.have.property("date", "Tomorrow");
+      const response = await bacchusContract.owner();
+      expect(response).to.eql(owner.address);
+    });
+
+    it("Stranger", async () => {
+      const response = await bacchusContract.owner();
+      expect(response).not.to.eql(stranger.address);
+    });
   });
 });

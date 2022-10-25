@@ -1,39 +1,126 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity >=0.7.0 <0.9.0;
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Bacchus {
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol"; //REFACTO
+
+contract Bacchus is Ownable {
     using SafeMath for uint256;
 
-    event NewEvent(uint256 eventId, string name, string description);
+    event NewEvent(uint256 eventId, string name);
+    event EventUpdated(uint256 eventId, string field);
+    event EventClosed(uint256 eventId, string name);
+
+    bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
+    bytes1[2][] nameInvalidRange = [
+        [bytes1(0x3a), bytes1(0x40)],
+        [bytes1(0x5b), bytes1(0x60)]
+    ];
+    uint8 nameMaxLength = 20;
 
     struct Event {
         string name;
         string description;
         string location;
-        string date;
+        uint256 date;
         uint16 reputation;
         bool closed;
     }
 
-    Event[] public events;
+    Event[] internal events;
+    uint256 public eventCount;
 
-    mapping(uint256 => address) public eventToOwner;
+    mapping(uint256 => address) public eventIdToUser;
+    mapping(address => uint256) internal userToEventId;
+    mapping(string => uint256) internal eventNameToEventId;
+
+    constructor() {
+        _createEvent(
+            "First Ever Event",
+            "Hey there, this is an easter egg",
+            "Everywhere",
+            block.timestamp
+        );
+        _closeEvent(0);
+    }
 
     function _createEvent(
         string memory _name,
         string memory _description,
         string memory _location,
-        string memory _date
-    ) public {
+        uint256 _date
+    ) internal {
         events.push(Event(_name, _description, _location, _date, 0, false));
+        eventCount++;
         uint256 id = events.length.sub(1);
-        eventToOwner[id] = msg.sender;
-        emit NewEvent(id, _name, _description);
+        eventIdToUser[id] = msg.sender;
+        userToEventId[msg.sender] = id;
+        eventNameToEventId[_name] = id;
+        emit NewEvent(id, _name);
     }
 
-    function _getEvent(uint256 _eventId) public view returns (Event memory) {
-        return events[_eventId];
+    function _getEvents() public view returns (Event[] memory nameArray) {
+        nameArray = new Event[](eventCount);
+        uint256 index;
+
+        for (uint256 i = 0; i < events.length; i++) {
+            Event memory iEvent = events[i];
+            if (!iEvent.closed) {
+                nameArray[index] = iEvent;
+                index++;
+            }
+        }
+    }
+
+    function _getEvent(uint256 _eventId)
+        internal
+        view
+        returns (
+            string memory,
+            string memory,
+            string memory,
+            uint256,
+            uint16
+        )
+    {
+        return (
+            events[_eventId].name,
+            events[_eventId].description,
+            events[_eventId].location,
+            events[_eventId].date,
+            events[_eventId].reputation
+        );
+    }
+
+    function _updateName(uint256 _eventId, string memory _newValue) internal {
+        events[_eventId].name = _newValue;
+        emit EventUpdated(_eventId, "Name");
+    }
+
+    function _updateDescription(uint256 _eventId, string memory _newValue)
+        internal
+    {
+        events[_eventId].description = _newValue;
+        emit EventUpdated(_eventId, "Description");
+    }
+
+    function _updateLocation(uint256 _eventId, string memory _newValue)
+        internal
+    {
+        events[_eventId].location = _newValue;
+        emit EventUpdated(_eventId, "Location");
+    }
+
+    function _updateDate(uint256 _eventId, uint256 _newValue) internal {
+        events[_eventId].date = _newValue;
+        emit EventUpdated(_eventId, "Date");
+    }
+
+    function _closeEvent(uint256 _eventId) internal {
+        Event storage myEvent = events[_eventId];
+        myEvent.closed = true;
+        eventCount--;
+        emit EventClosed(_eventId, myEvent.name);
     }
 }
