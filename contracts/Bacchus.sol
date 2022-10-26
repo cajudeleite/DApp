@@ -3,14 +3,17 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol"; //REFACTO
 
 contract Bacchus is Ownable {
     using SafeMath for uint256;
+    using SafeMath for uint16;
 
     event NewEvent(uint256 eventId, string name);
     event EventUpdated(uint256 eventId, string field);
     event EventClosed(uint256 eventId, string name);
+    event NameValidRangeChanged(bytes1[2] newRange);
+    event NameInvalidRangeChanged(bytes1[2][] newRange);
+    event NameMaxLengthChanged(uint8 newMaxLength);
 
     bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
     bytes1[2][] nameInvalidRange = [
@@ -24,7 +27,6 @@ contract Bacchus is Ownable {
         string description;
         string location;
         uint256 date;
-        uint16 reputation;
         bool closed;
     }
 
@@ -45,14 +47,35 @@ contract Bacchus is Ownable {
         _closeEvent(0);
     }
 
+    function changeNameValidRange(bytes1[2] memory _newRange)
+        external
+        onlyOwner
+    {
+        nameValidRange = _newRange;
+        emit NameValidRangeChanged(_newRange);
+    }
+
+    function changeNameInvalidRange(bytes1[2][] memory _newRange)
+        external
+        onlyOwner
+    {
+        nameInvalidRange = _newRange;
+        emit NameInvalidRangeChanged(_newRange);
+    }
+
+    function changeNameMaxLength(uint8 _newMaxLength) external onlyOwner {
+        nameMaxLength = _newMaxLength;
+        emit NameMaxLengthChanged(_newMaxLength);
+    }
+
     function _createEvent(
         string memory _name,
         string memory _description,
         string memory _location,
         uint256 _date
     ) internal {
-        events.push(Event(_name, _description, _location, _date, 0, false));
-        eventCount++;
+        events.push(Event(_name, _description, _location, _date, false));
+        eventCount = eventCount.add(1);
         uint256 id = events.length.sub(1);
         eventIdToUser[id] = msg.sender;
         userToEventId[msg.sender] = id;
@@ -64,11 +87,11 @@ contract Bacchus is Ownable {
         nameArray = new Event[](eventCount);
         uint256 index;
 
-        for (uint256 i = 0; i < events.length; i++) {
+        for (uint256 i = 0; i < events.length; i = i.add(1)) {
             Event memory iEvent = events[i];
             if (!iEvent.closed) {
                 nameArray[index] = iEvent;
-                index++;
+                index = index.add(1);
             }
         }
     }
@@ -80,16 +103,14 @@ contract Bacchus is Ownable {
             string memory,
             string memory,
             string memory,
-            uint256,
-            uint16
+            uint256
         )
     {
         return (
             events[_eventId].name,
             events[_eventId].description,
             events[_eventId].location,
-            events[_eventId].date,
-            events[_eventId].reputation
+            events[_eventId].date
         );
     }
 
@@ -120,7 +141,7 @@ contract Bacchus is Ownable {
     function _closeEvent(uint256 _eventId) internal {
         Event storage myEvent = events[_eventId];
         myEvent.closed = true;
-        eventCount--;
+        eventCount = eventCount.sub(1);
         emit EventClosed(_eventId, myEvent.name);
     }
 }

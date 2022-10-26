@@ -83,8 +83,7 @@ contract Event is Bacchus, Utils {
             string memory,
             string memory,
             string memory,
-            uint256,
-            uint16
+            uint256
         )
     {
         return _getEvent(_eventId);
@@ -100,8 +99,7 @@ contract Event is Bacchus, Utils {
             string memory,
             string memory,
             string memory,
-            uint256,
-            uint16
+            uint256
         )
     {
         return _getEvent(eventNameToEventId[_name]);
