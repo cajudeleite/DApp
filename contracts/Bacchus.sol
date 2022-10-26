@@ -3,10 +3,10 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "hardhat/console.sol"; //REFACTO
 
 contract Bacchus is Ownable {
     using SafeMath for uint256;
+    using SafeMath for uint16;
 
     event NewEvent(uint256 eventId, string name);
     event EventUpdated(uint256 eventId, string field);
@@ -24,7 +24,6 @@ contract Bacchus is Ownable {
         string description;
         string location;
         uint256 date;
-        uint16 reputation;
         bool closed;
     }
 
@@ -51,7 +50,7 @@ contract Bacchus is Ownable {
         string memory _location,
         uint256 _date
     ) internal {
-        events.push(Event(_name, _description, _location, _date, 0, false));
+        events.push(Event(_name, _description, _location, _date, false));
         eventCount++;
         uint256 id = events.length.sub(1);
         eventIdToUser[id] = msg.sender;
@@ -80,16 +79,14 @@ contract Bacchus is Ownable {
             string memory,
             string memory,
             string memory,
-            uint256,
-            uint16
+            uint256
         )
     {
         return (
             events[_eventId].name,
             events[_eventId].description,
             events[_eventId].location,
-            events[_eventId].date,
-            events[_eventId].reputation
+            events[_eventId].date
         );
     }
 

@@ -71,8 +71,7 @@ describe("Event", () => {
     expect(event[1]).to.eql("This is a test");
     expect(event[2]).to.eql("At my place");
     expect(event[3].toNumber()).to.equal(createdAt);
-    expect(event[4]).to.eql(0);
-    expect(event[5]).to.eql(false);
+    expect(event[4]).to.eql(false);
   });
 
   describe("\nTesting getEvent with event:", () => {
@@ -82,12 +81,10 @@ describe("Event", () => {
     it("Open", async () => {
       const response = await eventContract.getEvent(1);
 
-      expect(response).to.have.length(5);
       expect(response[0]).to.eql("Test");
       expect(response[1]).to.eql("This is a test");
       expect(response[2]).to.eql("At my place");
       expect(response[3].toNumber()).to.eql(createdAt);
-      expect(response[4]).to.eql(0);
     });
 
     it("Closed", async () => {
@@ -108,12 +105,10 @@ describe("Event", () => {
       it("Open", async () => {
         const response = await eventContract.searchEvent("Test");
 
-        expect(response).to.have.length(5);
         expect(response[0]).to.eql("Test");
         expect(response[1]).to.eql("This is a test");
         expect(response[2]).to.eql("At my place");
         expect(response[3].toNumber()).to.eql(createdAt);
-        expect(response[4]).to.eql(0);
       });
 
       it("Closed", async () => {
