@@ -70,7 +70,15 @@ contract Event is Bacchus, Utils {
         _createEvent(_name, _description, _location, _date);
     }
 
-    function getEvents() external view returns (Event[] memory) {
+    function getEvents()
+        external
+        view
+        returns (
+            uint256[] memory,
+            string[] memory,
+            string[] memory
+        )
+    {
         return _getEvents();
     }
 
