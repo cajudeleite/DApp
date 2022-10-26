@@ -64,15 +64,25 @@ describe("Event", () => {
 
     await eventContract.createEvent("Test", "This is a test", "At my place", createdAt);
 
-    const filteredResponse = await eventContract.getEvents();
-    const event = filteredResponse[0];
+    const response = await eventContract.getEvents();
+    const transformedResponse = [];
 
-    expect(filteredResponse).to.have.lengthOf(1);
-    expect(event[0]).to.eql("Test");
-    expect(event[1]).to.eql("This is a test");
-    expect(event[2]).to.eql("At my place");
-    expect(event[3].toNumber()).to.equal(createdAt);
-    expect(event[4]).to.eql(false);
+    for (let i = 0; i < response[0].length; i++) {
+      const eventObject = {
+        id: response[0][i],
+        name: response[1][i],
+        location: response[2][i],
+      };
+
+      transformedResponse.push(eventObject);
+    }
+
+    const event = transformedResponse[0];
+
+    expect(transformedResponse).to.have.lengthOf(1);
+    expect(event.id.toNumber()).to.eql(1);
+    expect(event.name).to.eql("Test");
+    expect(event.location).to.eql("At my place");
   });
 
   describe("\nTesting getEvent with event:", () => {

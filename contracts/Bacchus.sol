@@ -83,14 +83,26 @@ contract Bacchus is Ownable {
         emit NewEvent(id, _name);
     }
 
-    function _getEvents() public view returns (Event[] memory nameArray) {
-        nameArray = new Event[](eventCount);
+    function _getEvents()
+        public
+        view
+        returns (
+            uint256[] memory idArray,
+            string[] memory nameArray,
+            string[] memory locationArray
+        )
+    {
+        idArray = new uint256[](eventCount);
+        nameArray = new string[](eventCount);
+        locationArray = new string[](eventCount);
         uint256 index;
 
         for (uint256 i = 0; i < events.length; i = i.add(1)) {
             Event memory iEvent = events[i];
             if (!iEvent.closed) {
-                nameArray[index] = iEvent;
+                idArray[index] = i;
+                nameArray[index] = iEvent.name;
+                locationArray[index] = iEvent.location;
                 index = index.add(1);
             }
         }
