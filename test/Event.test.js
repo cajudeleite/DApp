@@ -63,6 +63,7 @@ describe("Event", () => {
     const createdAt = Date.now();
 
     await eventContract.createEvent("Test", "This is a test", "At my place", createdAt);
+
     const filteredResponse = await eventContract.getEvents();
     const event = filteredResponse[0];
 
@@ -100,6 +101,7 @@ describe("Event", () => {
   describe("\nTesting searchEvent", () => {
     describe("With event:", () => {
       const createdAt = Date.now();
+
       beforeEach(async () => await eventContract.createEvent("Test", "This is a test", "At my place", createdAt));
 
       it("Open", async () => {

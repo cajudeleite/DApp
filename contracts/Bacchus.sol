@@ -11,6 +11,9 @@ contract Bacchus is Ownable {
     event NewEvent(uint256 eventId, string name);
     event EventUpdated(uint256 eventId, string field);
     event EventClosed(uint256 eventId, string name);
+    event NameValidRangeChanged(bytes1[2] newRange);
+    event NameInvalidRangeChanged(bytes1[2][] newRange);
+    event NameMaxLengthChanged(uint8 newMaxLength);
 
     bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
     bytes1[2][] nameInvalidRange = [
@@ -42,6 +45,27 @@ contract Bacchus is Ownable {
             block.timestamp
         );
         _closeEvent(0);
+    }
+
+    function changeNameValidRange(bytes1[2] memory _newRange)
+        external
+        onlyOwner
+    {
+        nameValidRange = _newRange;
+        emit NameValidRangeChanged(_newRange);
+    }
+
+    function changeNameInvalidRange(bytes1[2][] memory _newRange)
+        external
+        onlyOwner
+    {
+        nameInvalidRange = _newRange;
+        emit NameInvalidRangeChanged(_newRange);
+    }
+
+    function changeNameMaxLength(uint8 _newMaxLength) external onlyOwner {
+        nameMaxLength = _newMaxLength;
+        emit NameMaxLengthChanged(_newMaxLength);
     }
 
     function _createEvent(
