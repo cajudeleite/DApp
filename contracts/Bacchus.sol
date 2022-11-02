@@ -41,10 +41,10 @@ contract Bacchus is Ownable {
         _createEvent(
             "First Ever Event",
             "Hey there, this is an easter egg",
-            "Everywhere",
+            "48.900875,2.073805",
             block.timestamp
         );
-        _closeEvent(0);
+        // _closeEvent(0);
     }
 
     function changeNameValidRange(bytes1[2] memory _newRange)
@@ -84,7 +84,7 @@ contract Bacchus is Ownable {
     }
 
     function _getEvents()
-        public
+        internal
         view
         returns (
             uint256[] memory idArray,

@@ -3,7 +3,6 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Bacchus.sol";
 import "./Utils.sol";
-import "hardhat/console.sol"; //REFACTO
 
 contract Event is Bacchus, Utils {
     modifier isEventOwner(uint256 _eventId, address _user) {
@@ -160,5 +159,9 @@ contract Event is Bacchus, Utils {
         isEventOwner(_eventId, msg.sender)
     {
         _closeEvent(_eventId);
+    }
+
+    function testGet() external pure returns (string memory) {
+        return "Hello world from dApp";
     }
 }

@@ -46,7 +46,7 @@ contract Utils {
         bytes1[2] memory _range,
         bytes1[2][] memory _invalidCharRange,
         uint256 _maxLength
-    ) public pure returns (bool, string memory) {
+    ) internal pure returns (bool, string memory) {
         if (!checkIfStringIsWithinValidRange(_string, _range)) {
             return (false, "String is not within range");
         }
