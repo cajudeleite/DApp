@@ -8,17 +8,17 @@ contract Bacchus is Ownable {
     using SafeMath for uint256;
     using SafeMath for uint16;
 
-    event NewEvent(uint256 eventId, string name);
-    event EventUpdated(uint256 eventId, string field);
-    event EventClosed(uint256 eventId, string name);
+    event NewEvent(address indexed user, uint256 eventId, string name);
+    event EventUpdated(address indexed user, uint256 eventId, string field);
+    event EventClosed(address indexed user, uint256 eventId, string name);
     event NameValidRangeChanged(bytes1[2] newRange);
     event NameInvalidRangeChanged(bytes1[2][] newRange);
     event NameMaxLengthChanged(uint8 newMaxLength);
 
-    bytes1[2] nameValidRange = [bytes1(0x30), bytes1(0x7a)];
+    bytes1[2] nameValidRange = [bytes1(0x2d), bytes1(0x7a)];
     bytes1[2][] nameInvalidRange = [
-        [bytes1(0x3a), bytes1(0x40)],
-        [bytes1(0x5b), bytes1(0x60)]
+        [bytes1(0x2e), bytes1(0x2f)],
+        [bytes1(0x3a), bytes1(0x60)]
     ];
     uint8 nameMaxLength = 20;
 
@@ -34,17 +34,17 @@ contract Bacchus is Ownable {
     uint256 public eventCount;
 
     mapping(uint256 => address) public eventIdToUser;
-    mapping(address => uint256) internal userToEventId;
+    mapping(address => uint256) public userToEventId;
     mapping(string => uint256) internal eventNameToEventId;
 
     constructor() {
         _createEvent(
             "First Ever Event",
             "Hey there, this is an easter egg",
-            "48.900875,2.073805",
+            "Wonderland",
             block.timestamp
         );
-        // _closeEvent(0);
+        _closeEvent(0);
     }
 
     function changeNameValidRange(bytes1[2] memory _newRange)
@@ -80,7 +80,7 @@ contract Bacchus is Ownable {
         eventIdToUser[id] = msg.sender;
         userToEventId[msg.sender] = id;
         eventNameToEventId[_name] = id;
-        emit NewEvent(id, _name);
+        emit NewEvent(msg.sender, id, _name);
     }
 
     function _getEvents()
@@ -128,32 +128,34 @@ contract Bacchus is Ownable {
 
     function _updateName(uint256 _eventId, string memory _newValue) internal {
         events[_eventId].name = _newValue;
-        emit EventUpdated(_eventId, "Name");
+        emit EventUpdated(msg.sender, _eventId, "Name");
     }
 
     function _updateDescription(uint256 _eventId, string memory _newValue)
         internal
     {
         events[_eventId].description = _newValue;
-        emit EventUpdated(_eventId, "Description");
+        emit EventUpdated(msg.sender, _eventId, "Description");
     }
 
     function _updateLocation(uint256 _eventId, string memory _newValue)
         internal
     {
         events[_eventId].location = _newValue;
-        emit EventUpdated(_eventId, "Location");
+        emit EventUpdated(msg.sender, _eventId, "Location");
     }
 
     function _updateDate(uint256 _eventId, uint256 _newValue) internal {
         events[_eventId].date = _newValue;
-        emit EventUpdated(_eventId, "Date");
+        emit EventUpdated(msg.sender, _eventId, "Date");
     }
 
     function _closeEvent(uint256 _eventId) internal {
         Event storage myEvent = events[_eventId];
         myEvent.closed = true;
         eventCount = eventCount.sub(1);
-        emit EventClosed(_eventId, myEvent.name);
+        userToEventId[msg.sender] = 0;
+        eventNameToEventId[myEvent.name] = 0;
+        emit EventClosed(msg.sender, _eventId, myEvent.name);
     }
 }
