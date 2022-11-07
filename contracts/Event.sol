@@ -3,17 +3,8 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "./Bacchus.sol";
 import "./Utils.sol";
-import "hardhat/console.sol"; //REFACTO
 
 contract Event is Bacchus, Utils {
-    modifier isEventOwner(uint256 _eventId, address _user) {
-        require(
-            _user == eventIdToUser[_eventId],
-            "User is not the owner of this event"
-        );
-        _;
-    }
-
     modifier userHasNoEvent(address _user) {
         require(userToEventId[_user] == 0, "User already has an event");
         _;
@@ -21,13 +12,11 @@ contract Event is Bacchus, Utils {
 
     modifier eventExists(uint256 _eventId, bool _exists) {
         string memory message;
-
         if (_exists) {
-            message = "Event does not exist";
+            message = "Event is either closed or does not exist";
         } else {
             message = "Event already exists";
         }
-
         require(checkIfEventExists(_eventId) == _exists, message);
         _;
     }
@@ -40,14 +29,12 @@ contract Event is Bacchus, Utils {
     modifier nameIsValid(string memory _name) {
         bool valid;
         string memory message;
-
         (valid, message) = checkIfStringIsValid(
             _name,
             nameValidRange,
             nameInvalidRange,
             nameMaxLength
         );
-
         require(valid, message);
         _;
     }
@@ -102,7 +89,6 @@ contract Event is Bacchus, Utils {
         view
         nameIsValid(_name)
         eventExists(eventNameToEventId[_name], true)
-        eventIsOpen(eventNameToEventId[_name])
         returns (
             string memory,
             string memory,
@@ -114,51 +100,43 @@ contract Event is Bacchus, Utils {
     }
 
     function updateEvent(
-        uint256 _eventId,
         string memory _name,
         string memory _description,
         string memory _location,
         uint256 _date
-    )
-        external
-        eventExists(_eventId, true)
-        eventIsOpen(_eventId)
-        isEventOwner(_eventId, msg.sender)
-        nameIsValid(_name)
-    {
+    ) external eventExists(userToEventId[msg.sender], true) nameIsValid(_name) {
+        uint256 eventId = userToEventId[msg.sender];
         if (
-            keccak256(abi.encodePacked(events[_eventId].name)) !=
+            keccak256(abi.encodePacked(events[eventId].name)) !=
             keccak256(abi.encodePacked(_name))
         ) {
             require(
                 !checkIfEventExists(eventNameToEventId[_name]),
                 "Event already exists"
             );
-            _updateName(_eventId, _name);
+            _updateName(eventId, _name);
         }
         if (
-            keccak256(abi.encodePacked(events[_eventId].description)) !=
+            keccak256(abi.encodePacked(events[eventId].description)) !=
             keccak256(abi.encodePacked(_description))
         ) {
-            _updateDescription(_eventId, _description);
+            _updateDescription(eventId, _description);
         }
         if (
-            keccak256(abi.encodePacked(events[_eventId].location)) !=
+            keccak256(abi.encodePacked(events[eventId].location)) !=
             keccak256(abi.encodePacked(_location))
         ) {
-            _updateLocation(_eventId, _location);
+            _updateLocation(eventId, _location);
         }
-        if (events[_eventId].date != _date) {
-            _updateDate(_eventId, _date);
+        if (events[eventId].date != _date) {
+            _updateDate(eventId, _date);
         }
     }
 
-    function closeEvent(uint256 _eventId)
+    function closeEvent()
         external
-        eventExists(_eventId, true)
-        eventIsOpen(_eventId)
-        isEventOwner(_eventId, msg.sender)
+        eventExists(userToEventId[msg.sender], true)
     {
-        _closeEvent(_eventId);
+        _closeEvent(userToEventId[msg.sender]);
     }
 }
