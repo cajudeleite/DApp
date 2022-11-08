@@ -45,6 +45,7 @@ contract Utils {
         string memory _string,
         bytes1[2] memory _range,
         bytes1[2][] memory _invalidCharRange,
+        uint256 _minLength,
         uint256 _maxLength
     ) internal pure returns (bool, string memory) {
         if (!checkIfStringIsWithinValidRange(_string, _range)) {
@@ -52,6 +53,9 @@ contract Utils {
         }
         if (checkIfStringContainsInvalidCharRange(_string, _invalidCharRange)) {
             return (false, "String contains invalid character");
+        }
+        if (stringLength(_string) < _minLength) {
+            return (false, "String subceeds the min length");
         }
         if (stringLength(_string) > _maxLength) {
             return (false, "String exceeds the max length");

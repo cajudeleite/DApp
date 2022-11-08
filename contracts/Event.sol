@@ -33,6 +33,7 @@ contract Event is Bacchus, Utils {
             _name,
             nameValidRange,
             nameInvalidRange,
+            nameMinLength,
             nameMaxLength
         );
         require(valid, message);

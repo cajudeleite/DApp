@@ -20,7 +20,8 @@ contract Bacchus is Ownable {
         [bytes1(0x2e), bytes1(0x2f)],
         [bytes1(0x3a), bytes1(0x60)]
     ];
-    uint8 nameMaxLength = 20;
+    uint8 public nameMinLength = 3;
+    uint8 public nameMaxLength = 25;
 
     struct Event {
         string name;
