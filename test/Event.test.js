@@ -39,6 +39,12 @@ describe("Event", () => {
         );
       });
 
+      it("Too short", async () => {
+        await expect(eventContract.createEvent("om", "This is a test", "At my place", Date.now())).to.be.revertedWith(
+          "String subceeds the min length"
+        );
+      });
+
       it("Too long", async () => {
         await expect(
           eventContract.createEvent("omg-this-name-is-so-long-that-it-wont-pass", "This is a test", "At my place", Date.now())
@@ -150,6 +156,10 @@ describe("Event", () => {
         await expect(eventContract.searchEvent("Test")).to.be.revertedWith("String contains invalid character");
       });
 
+      it("Too short", async () => {
+        await expect(eventContract.searchEvent("om")).to.be.revertedWith("String subceeds the min length");
+      });
+
       it("Too long", async () => {
         await expect(eventContract.searchEvent("omg-this-name-is-so-long-that-it-wont-pass")).to.be.revertedWith("String exceeds the max length");
       });
@@ -204,6 +214,9 @@ describe("Event", () => {
         await expect(eventContract.updateEvent("AnotherTest", "This is a test", "At my place", createdAt)).to.revertedWith(
           "String contains invalid character"
         ));
+
+      it("Too short", async () =>
+        await expect(eventContract.updateEvent("om", "This is a test", "At my place", createdAt)).to.revertedWith("String subceeds the min length"));
 
       it("Too long", async () =>
         await expect(
