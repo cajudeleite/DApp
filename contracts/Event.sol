@@ -2,9 +2,8 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./Bacchus.sol";
-import "./Utils.sol";
 
-contract Event is Bacchus, Utils {
+contract Event is Bacchus {
     modifier userHasNoEvent(address _user) {
         require(userToEventId[_user] == 0, "User already has an event");
         _;

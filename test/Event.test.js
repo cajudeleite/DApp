@@ -51,19 +51,19 @@ describe("Event", () => {
         ).to.be.revertedWith("String exceeds the max length");
       });
 
-      it("When user already has an event", async () => {
-        await eventContract.createEvent("test", "This is a test", "At my place", Date.now());
-        await expect(eventContract.createEvent("another-test", "This is a test", "At my place", Date.now())).to.be.revertedWith(
-          "User already has an event"
-        );
-      });
-
       it("Duplicated", async () => {
         await eventContract.createEvent("test", "This is a test", "At my place", Date.now());
         await expect(eventContract.connect(stranger).createEvent("test", "This is a test", "At my place", Date.now())).to.be.revertedWith(
           "Event already exists"
         );
       });
+    });
+
+    it("When user already has an event", async () => {
+      await eventContract.createEvent("test", "This is a test", "At my place", Date.now());
+      await expect(eventContract.createEvent("another-test", "This is a test", "At my place", Date.now())).to.be.revertedWith(
+        "User already has an event"
+      );
     });
   });
 

@@ -3,8 +3,9 @@ pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./Utils.sol";
 
-contract Bacchus is Ownable {
+contract Bacchus is Ownable, Utils {
     using SafeMath for uint256;
     using SafeMath for uint16;
 
@@ -14,6 +15,10 @@ contract Bacchus is Ownable {
     event NameValidRangeChanged(bytes1[2] newRange);
     event NameInvalidRangeChanged(bytes1[2][] newRange);
     event NameMaxLengthChanged(uint8 newMaxLength);
+    event NameMinLengthChanged(uint8 newMinLength);
+    event UsernameMaxLengthChanged(uint8 newMaxLength);
+    event UsernameMinLengthChanged(uint8 newMinLength);
+    event UsernameSet(address indexed user, string username);
 
     bytes1[2] nameValidRange = [bytes1(0x2d), bytes1(0x7a)];
     bytes1[2][] nameInvalidRange = [
@@ -21,7 +26,9 @@ contract Bacchus is Ownable {
         [bytes1(0x3a), bytes1(0x60)]
     ];
     uint8 public nameMinLength = 3;
-    uint8 public nameMaxLength = 25;
+    uint8 public nameMaxLength = 24;
+    uint8 public usernameMinLength = 3;
+    uint8 public usernameMaxLength = 16;
 
     struct Event {
         string name;
@@ -37,6 +44,8 @@ contract Bacchus is Ownable {
     mapping(uint256 => address) public eventIdToUser;
     mapping(address => uint256) public userToEventId;
     mapping(string => uint256) internal eventNameToEventId;
+    mapping(address => string) internal userAddressToUsername;
+    mapping(string => address) internal usernameToUserAddress;
 
     constructor() {
         _createEvent(
@@ -46,6 +55,36 @@ contract Bacchus is Ownable {
             block.timestamp
         );
         _closeEvent(0);
+    }
+
+    modifier usernameIsValid(string memory _username) {
+        bool valid;
+        string memory message;
+        (valid, message) = checkIfStringIsValid(
+            _username,
+            nameValidRange,
+            nameInvalidRange,
+            usernameMinLength,
+            usernameMaxLength
+        );
+        require(valid, message);
+        _;
+    }
+
+    modifier userHasNoUsername(address _user) {
+        require(
+            bytes(userAddressToUsername[msg.sender]).length == 0,
+            "User already has an username"
+        );
+        _;
+    }
+
+    modifier usernameIsNotTaken(string memory _username) {
+        require(
+            usernameToUserAddress[_username] == address(0),
+            "Username is already taken"
+        );
+        _;
     }
 
     function changeNameValidRange(bytes1[2] memory _newRange)
@@ -67,6 +106,32 @@ contract Bacchus is Ownable {
     function changeNameMaxLength(uint8 _newMaxLength) external onlyOwner {
         nameMaxLength = _newMaxLength;
         emit NameMaxLengthChanged(_newMaxLength);
+    }
+
+    function changeNameMinLength(uint8 _newMinLength) external onlyOwner {
+        nameMinLength = _newMinLength;
+        emit NameMinLengthChanged(_newMinLength);
+    }
+
+    function changeUsernameMaxLength(uint8 _newMaxLength) external onlyOwner {
+        usernameMaxLength = _newMaxLength;
+        emit UsernameMaxLengthChanged(_newMaxLength);
+    }
+
+    function changeUsernameMinLength(uint8 _newMinLength) external onlyOwner {
+        usernameMinLength = _newMinLength;
+        emit UsernameMinLengthChanged(_newMinLength);
+    }
+
+    function setUsername(string memory _newUsername)
+        external
+        userHasNoUsername(msg.sender)
+        usernameIsValid(_newUsername)
+        usernameIsNotTaken(_newUsername)
+    {
+        userAddressToUsername[msg.sender] = _newUsername;
+        usernameToUserAddress[_newUsername] = msg.sender;
+        emit UsernameSet(msg.sender, _newUsername);
     }
 
     function _createEvent(
