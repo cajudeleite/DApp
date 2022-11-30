@@ -86,14 +86,11 @@ contract Bacchus is Ownable, Utils {
         _;
     }
 
-    modifier usernameIsTaken(string memory _username, bool _is) {
-        string memory message;
-        if (!_is) {
-            require(
-                usernameToUserAddress[_username] == address(0),
-                "Username is already taken"
-            );
-        }
+    modifier usernameIsNotTaken(string memory _username) {
+        require(
+            usernameToUserAddress[_username] == address(0),
+            "Username is already taken"
+        );
         _;
     }
 
@@ -230,7 +227,7 @@ contract Bacchus is Ownable, Utils {
     function setUsername(string memory _newUsername)
         external
         userHasUsername(msg.sender, false)
-        usernameIsTaken(_newUsername, false)
+        usernameIsNotTaken(_newUsername)
         usernameIsValid(_newUsername)
     {
         userAddressToUsername[msg.sender] = _newUsername;
