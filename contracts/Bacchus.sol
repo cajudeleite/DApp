@@ -41,8 +41,8 @@ contract Bacchus is Ownable, Utils {
     Event[] internal events;
     uint256 public eventCount;
 
-    mapping(uint256 => address) public eventIdToUser;
-    mapping(address => uint256) public userToEventId;
+    mapping(uint256 => address) internal eventIdToUser;
+    mapping(address => uint256) internal userToEventId;
     mapping(string => uint256) internal eventNameToEventId;
     mapping(address => string) internal userAddressToUsername;
     mapping(string => address) internal usernameToUserAddress;
@@ -71,67 +71,30 @@ contract Bacchus is Ownable, Utils {
         _;
     }
 
-    modifier userHasNoUsername(address _user) {
-        require(
-            bytes(userAddressToUsername[msg.sender]).length == 0,
-            "User already has an username"
-        );
+    modifier userHasUsername(address _user, bool _has) {
+        if (_has) {
+            require(
+                bytes(userAddressToUsername[msg.sender]).length > 0,
+                "User does not have an username"
+            );
+        } else {
+            require(
+                bytes(userAddressToUsername[msg.sender]).length == 0,
+                "User already has an username"
+            );
+        }
         _;
     }
 
-    modifier usernameIsNotTaken(string memory _username) {
-        require(
-            usernameToUserAddress[_username] == address(0),
-            "Username is already taken"
-        );
+    modifier usernameIsTaken(string memory _username, bool _is) {
+        string memory message;
+        if (!_is) {
+            require(
+                usernameToUserAddress[_username] == address(0),
+                "Username is already taken"
+            );
+        }
         _;
-    }
-
-    function changeNameValidRange(bytes1[2] memory _newRange)
-        external
-        onlyOwner
-    {
-        nameValidRange = _newRange;
-        emit NameValidRangeChanged(_newRange);
-    }
-
-    function changeNameInvalidRange(bytes1[2][] memory _newRange)
-        external
-        onlyOwner
-    {
-        nameInvalidRange = _newRange;
-        emit NameInvalidRangeChanged(_newRange);
-    }
-
-    function changeNameMaxLength(uint8 _newMaxLength) external onlyOwner {
-        nameMaxLength = _newMaxLength;
-        emit NameMaxLengthChanged(_newMaxLength);
-    }
-
-    function changeNameMinLength(uint8 _newMinLength) external onlyOwner {
-        nameMinLength = _newMinLength;
-        emit NameMinLengthChanged(_newMinLength);
-    }
-
-    function changeUsernameMaxLength(uint8 _newMaxLength) external onlyOwner {
-        usernameMaxLength = _newMaxLength;
-        emit UsernameMaxLengthChanged(_newMaxLength);
-    }
-
-    function changeUsernameMinLength(uint8 _newMinLength) external onlyOwner {
-        usernameMinLength = _newMinLength;
-        emit UsernameMinLengthChanged(_newMinLength);
-    }
-
-    function setUsername(string memory _newUsername)
-        external
-        userHasNoUsername(msg.sender)
-        usernameIsValid(_newUsername)
-        usernameIsNotTaken(_newUsername)
-    {
-        userAddressToUsername[msg.sender] = _newUsername;
-        usernameToUserAddress[_newUsername] = msg.sender;
-        emit UsernameSet(msg.sender, _newUsername);
     }
 
     function _createEvent(
@@ -181,13 +144,16 @@ contract Bacchus is Ownable, Utils {
             string memory,
             string memory,
             string memory,
+            string memory,
             uint256
         )
     {
+        string memory username = userAddressToUsername[eventIdToUser[_eventId]];
         return (
             events[_eventId].name,
             events[_eventId].description,
             events[_eventId].location,
+            username,
             events[_eventId].date
         );
     }
@@ -223,5 +189,52 @@ contract Bacchus is Ownable, Utils {
         userToEventId[msg.sender] = 0;
         eventNameToEventId[myEvent.name] = 0;
         emit EventClosed(msg.sender, _eventId, myEvent.name);
+    }
+
+    function changeNameValidRange(bytes1[2] memory _newRange)
+        external
+        onlyOwner
+    {
+        nameValidRange = _newRange;
+        emit NameValidRangeChanged(_newRange);
+    }
+
+    function changeNameInvalidRange(bytes1[2][] memory _newRange)
+        external
+        onlyOwner
+    {
+        nameInvalidRange = _newRange;
+        emit NameInvalidRangeChanged(_newRange);
+    }
+
+    function changeNameMaxLength(uint8 _newMaxLength) external onlyOwner {
+        nameMaxLength = _newMaxLength;
+        emit NameMaxLengthChanged(_newMaxLength);
+    }
+
+    function changeNameMinLength(uint8 _newMinLength) external onlyOwner {
+        nameMinLength = _newMinLength;
+        emit NameMinLengthChanged(_newMinLength);
+    }
+
+    function changeUsernameMaxLength(uint8 _newMaxLength) external onlyOwner {
+        usernameMaxLength = _newMaxLength;
+        emit UsernameMaxLengthChanged(_newMaxLength);
+    }
+
+    function changeUsernameMinLength(uint8 _newMinLength) external onlyOwner {
+        usernameMinLength = _newMinLength;
+        emit UsernameMinLengthChanged(_newMinLength);
+    }
+
+    function setUsername(string memory _newUsername)
+        external
+        userHasUsername(msg.sender, false)
+        usernameIsTaken(_newUsername, false)
+        usernameIsValid(_newUsername)
+    {
+        userAddressToUsername[msg.sender] = _newUsername;
+        usernameToUserAddress[_newUsername] = msg.sender;
+        emit UsernameSet(msg.sender, _newUsername);
     }
 }
