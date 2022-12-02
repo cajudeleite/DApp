@@ -151,7 +151,7 @@ contract Event is Bacchus {
         return _eventId > 0 && _eventId < events.length;
     }
 
-    function checkIfUserHasAnEvent() external view returns (bool) {
-        return userToEventId[msg.sender] > 0;
+    function getUserEvent() external view returns (uint256) {
+        return userToEventId[msg.sender];
     }
 }

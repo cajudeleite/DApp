@@ -305,17 +305,17 @@ describe("Event", () => {
     });
   });
 
-  describe("\nTesting checkIfUserHasAnEvent:", () => {
+  describe("\nTesting getUserEvent:", () => {
     it("User has an event", async () => {
       await eventContract.setUsername("test");
       await eventContract.createEvent("test", "This is a test", "At my place", Date.now());
-      const response = await eventContract.checkIfUserHasAnEvent();
-      expect(response).to.be.true;
+      const response = await eventContract.getUserEvent();
+      expect(response).to.be.equal(1);
     });
 
     it("User does not have an event", async () => {
-      const response = await eventContract.checkIfUserHasAnEvent();
-      expect(response).to.be.false;
+      const response = await eventContract.getUserEvent();
+      expect(response).to.be.equal(0);
     });
   });
 });

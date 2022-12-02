@@ -135,4 +135,19 @@ describe("Bacchus", () => {
       await expect(bacchusContract.setUsername("test-two")).to.be.revertedWith("User already has an username");
     });
   });
+
+  describe("\nTesting userFirstConnection with user:", () => {
+    it("Without username", async () => {
+      const response = await bacchusContract.userFirstConnection();
+
+      expect(response).to.be.true;
+    });
+
+    it("With username", async () => {
+      await bacchusContract.setUsername("test");
+      const response = await bacchusContract.userFirstConnection();
+
+      expect(response).to.be.false;
+    });
+  });
 });

@@ -234,4 +234,8 @@ contract Bacchus is Ownable, Utils {
         usernameToUserAddress[_newUsername] = msg.sender;
         emit UsernameSet(msg.sender, _newUsername);
     }
+
+    function userFirstConnection() external view returns (bool) {
+        return bytes(userAddressToUsername[msg.sender]).length == 0;
+    }
 }
