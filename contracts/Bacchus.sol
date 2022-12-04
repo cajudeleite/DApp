@@ -27,7 +27,7 @@ contract Bacchus is Ownable, Utils {
     ];
     uint8 public nameMinLength = 3;
     uint8 public nameMaxLength = 24;
-    uint8 public usernameMinLength = 3;
+    uint8 public usernameMinLength = 5;
     uint8 public usernameMaxLength = 16;
 
     struct Event {
@@ -48,6 +48,8 @@ contract Bacchus is Ownable, Utils {
     mapping(string => address) internal usernameToUserAddress;
 
     constructor() {
+        userAddressToUsername[msg.sender] = "caju";
+        usernameToUserAddress["caju"] = msg.sender;
         _createEvent(
             "First Ever Event",
             "Hey there, this is an easter egg",

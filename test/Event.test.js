@@ -14,10 +14,6 @@ describe("Event", () => {
   });
 
   describe("\nTesting createEvent", () => {
-    beforeEach(async () => {
-      await eventContract.setUsername("test");
-    });
-
     it("With the right arguments", async () => {
       await expect(eventContract.createEvent("test", "This is a test", "At my place", Date.now()))
         .to.emit(eventContract, "NewEvent")
@@ -84,7 +80,6 @@ describe("Event", () => {
     it("Username", async () => {
       const createdAt = Date.now();
 
-      await eventContract.setUsername("test");
       await eventContract.createEvent("test", "This is a test", "At my place", createdAt);
 
       const response = await eventContract.getEvents();
@@ -111,7 +106,6 @@ describe("Event", () => {
     it("No username", async () => {
       const createdAt = Date.now();
 
-      await eventContract.setUsername("test");
       await eventContract.createEvent("test", "This is a test", "At my place", createdAt);
       await expect(eventContract.connect(stranger).getEvents()).to.be.rejectedWith("User does not have an username");
     });
@@ -120,7 +114,6 @@ describe("Event", () => {
   describe("\nTesting getEvent with event:", () => {
     const createdAt = Date.now();
     beforeEach(async () => {
-      await eventContract.setUsername("test");
       await eventContract.createEvent("test", "This is a test", "At my place", createdAt);
     });
 
@@ -130,7 +123,7 @@ describe("Event", () => {
       expect(response[0]).to.eql("test");
       expect(response[1]).to.eql("This is a test");
       expect(response[2]).to.eql("At my place");
-      expect(response[3]).to.eql("test");
+      expect(response[3]).to.eql("caju");
       expect(response[4].toNumber()).to.eql(createdAt);
     });
 
@@ -153,7 +146,6 @@ describe("Event", () => {
       const createdAt = Date.now();
 
       beforeEach(async () => {
-        await eventContract.setUsername("test");
         await eventContract.createEvent("test", "This is a test", "At my place", createdAt);
       });
 
@@ -163,7 +155,7 @@ describe("Event", () => {
         expect(response[0]).to.eql("test");
         expect(response[1]).to.eql("This is a test");
         expect(response[2]).to.eql("At my place");
-        expect(response[3]).to.eql("test");
+        expect(response[3]).to.eql("caju");
         expect(response[4].toNumber()).to.eql(createdAt);
       });
 
@@ -178,8 +170,6 @@ describe("Event", () => {
     });
 
     describe("With name:", () => {
-      beforeEach(async () => await eventContract.setUsername("test"));
-
       describe("Out of range:", () => {
         it("Up", async () => {
           await expect(eventContract.searchEvent("te|st")).to.be.revertedWith("String is not within range");
@@ -212,7 +202,6 @@ describe("Event", () => {
     const createdAt = Date.now();
 
     beforeEach(async () => {
-      await eventContract.setUsername("test");
       await eventContract.createEvent("test", "This is a test", "At my place", createdAt);
     });
 
@@ -286,7 +275,6 @@ describe("Event", () => {
   describe("\nTesting closeEvent", () => {
     describe("With event:", () => {
       beforeEach(async () => {
-        await eventContract.setUsername("test");
         await eventContract.createEvent("test", "This is a test", "At my place", Date.now());
       });
 
@@ -307,7 +295,6 @@ describe("Event", () => {
 
   describe("\nTesting getUserEvent:", () => {
     it("User has an event", async () => {
-      await eventContract.setUsername("test");
       await eventContract.createEvent("test", "This is a test", "At my place", Date.now());
       const response = await eventContract.getUserEvent();
       expect(response).to.be.equal(1);

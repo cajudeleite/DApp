@@ -98,53 +98,54 @@ describe("Bacchus", () => {
 
   describe("\nTesting setUsername with:", () => {
     it("Valid username", async () => {
-      await expect(bacchusContract.setUsername("test")).to.emit(bacchusContract, "UsernameSet").withArgs(owner.address, "test");
+      await expect(bacchusContract.connect(stranger).setUsername("tester"))
+        .to.emit(bacchusContract, "UsernameSet")
+        .withArgs(stranger.address, "tester");
     });
 
     describe("With username:", () => {
       describe("Out of range:", () => {
         it("Up", async () => {
-          await expect(bacchusContract.setUsername("te|st")).to.be.revertedWith("String is not within range");
+          await expect(bacchusContract.connect(stranger).setUsername("te|st")).to.be.revertedWith("String is not within range");
         });
 
         it("Down", async () => {
-          await expect(bacchusContract.setUsername("te st")).to.be.revertedWith("String is not within range");
+          await expect(bacchusContract.connect(stranger).setUsername("te st")).to.be.revertedWith("String is not within range");
         });
       });
 
       it("Invalid char", async () => {
-        await expect(bacchusContract.setUsername("Test")).to.be.revertedWith("String contains invalid character");
+        await expect(bacchusContract.connect(stranger).setUsername("Test")).to.be.revertedWith("String contains invalid character");
       });
 
       it("Too short", async () => {
-        await expect(bacchusContract.setUsername("om")).to.be.revertedWith("String subceeds the min length");
+        await expect(bacchusContract.connect(stranger).setUsername("om")).to.be.revertedWith("String subceeds the min length");
       });
 
       it("Too long", async () => {
-        await expect(bacchusContract.setUsername("omg-this-name-is-so-long-that-it-wont-pass")).to.be.revertedWith("String exceeds the max length");
+        await expect(bacchusContract.connect(stranger).setUsername("omg-this-name-is-so-long-that-it-wont-pass")).to.be.revertedWith(
+          "String exceeds the max length"
+        );
       });
 
       it("Duplicated", async () => {
-        await bacchusContract.setUsername("test");
-        await expect(bacchusContract.connect(stranger).setUsername("test")).to.be.revertedWith("Username is already taken");
+        await expect(bacchusContract.connect(stranger).setUsername("caju")).to.be.revertedWith("Username is already taken");
       });
     });
 
     it("Already has an username", async () => {
-      await bacchusContract.setUsername("test");
       await expect(bacchusContract.setUsername("test-two")).to.be.revertedWith("User already has an username");
     });
   });
 
   describe("\nTesting userFirstConnection with user:", () => {
     it("Without username", async () => {
-      const response = await bacchusContract.userFirstConnection();
+      const response = await bacchusContract.connect(stranger).userFirstConnection();
 
       expect(response).to.be.true;
     });
 
     it("With username", async () => {
-      await bacchusContract.setUsername("test");
       const response = await bacchusContract.userFirstConnection();
 
       expect(response).to.be.false;
