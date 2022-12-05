@@ -5,10 +5,10 @@ const deploy = async () => {
 
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const Token = await ethers.getContractFactory("Token");
-  const token = await Token.deploy();
+  const Bacchus = await ethers.getContractFactory("Event");
+  const bacchus = await Bacchus.deploy();
 
-  console.log("Token address:", token.address);
+  console.log("Bacchus address:", bacchus.address);
 };
 
 deploy()
