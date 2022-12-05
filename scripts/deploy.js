@@ -11,7 +11,7 @@ const deploy = async () => {
   console.log("Token address:", token.address);
 };
 
-main()
+deploy()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
