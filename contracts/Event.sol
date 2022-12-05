@@ -2,33 +2,26 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "./Bacchus.sol";
-import "./Utils.sol";
-import "hardhat/console.sol"; //REFACTO
 
-contract Event is Bacchus, Utils {
-    modifier isEventOwner(uint256 _eventId, address _user) {
-        require(
-            _user == eventIdToUser[_eventId],
-            "User is not the owner of this event"
-        );
-        _;
-    }
-
-    modifier userHasNoEvent(address _user) {
-        require(userToEventId[_user] == 0, "User already has an event");
+contract Event is Bacchus {
+    modifier userHasEvent(address _user, bool _has) {
+        if (_has) {
+            require(userToEventId[_user] > 0, "User does not have an event");
+        } else {
+            require(userToEventId[_user] == 0, "User already has an event");
+        }
         _;
     }
 
     modifier eventExists(uint256 _eventId, bool _exists) {
-        string memory message;
-
         if (_exists) {
-            message = "Event does not exist";
+            require(
+                checkIfEventExists(_eventId),
+                "Event is either closed or does not exist"
+            );
         } else {
-            message = "Event already exists";
+            require(!checkIfEventExists(_eventId), "Event already exists");
         }
-
-        require(checkIfEventExists(_eventId) == _exists, message);
         _;
     }
 
@@ -40,20 +33,15 @@ contract Event is Bacchus, Utils {
     modifier nameIsValid(string memory _name) {
         bool valid;
         string memory message;
-
         (valid, message) = checkIfStringIsValid(
             _name,
             nameValidRange,
             nameInvalidRange,
+            nameMinLength,
             nameMaxLength
         );
-
         require(valid, message);
         _;
-    }
-
-    function checkIfEventExists(uint256 _eventId) private view returns (bool) {
-        return _eventId > 0 && _eventId < events.length;
     }
 
     function createEvent(
@@ -63,28 +51,39 @@ contract Event is Bacchus, Utils {
         uint256 _date
     )
         external
+        userHasUsername(msg.sender, true)
         eventExists(eventNameToEventId[_name], false)
-        userHasNoEvent(msg.sender)
+        userHasEvent(msg.sender, false)
         nameIsValid(_name)
     {
         _createEvent(_name, _description, _location, _date);
     }
 
-    function getEvents() external view returns (Event[] memory) {
+    function getEvents()
+        external
+        view
+        userHasUsername(msg.sender, true)
+        returns (
+            uint256[] memory,
+            string[] memory,
+            string[] memory
+        )
+    {
         return _getEvents();
     }
 
     function getEvent(uint256 _eventId)
         external
         view
+        userHasUsername(msg.sender, true)
         eventExists(_eventId, true)
         eventIsOpen(_eventId)
         returns (
             string memory,
             string memory,
             string memory,
-            uint256,
-            uint16
+            string memory,
+            uint256
         )
     {
         return _getEvent(_eventId);
@@ -93,66 +92,66 @@ contract Event is Bacchus, Utils {
     function searchEvent(string memory _name)
         external
         view
+        userHasUsername(msg.sender, true)
         nameIsValid(_name)
         eventExists(eventNameToEventId[_name], true)
-        eventIsOpen(eventNameToEventId[_name])
         returns (
             string memory,
             string memory,
             string memory,
-            uint256,
-            uint16
+            string memory,
+            uint256
         )
     {
         return _getEvent(eventNameToEventId[_name]);
     }
 
     function updateEvent(
-        uint256 _eventId,
         string memory _name,
         string memory _description,
         string memory _location,
         uint256 _date
-    )
-        external
-        eventExists(_eventId, true)
-        eventIsOpen(_eventId)
-        isEventOwner(_eventId, msg.sender)
-        nameIsValid(_name)
-    {
+    ) external userHasEvent(msg.sender, true) nameIsValid(_name) {
+        uint256 eventId = userToEventId[msg.sender];
         if (
-            keccak256(abi.encodePacked(events[_eventId].name)) !=
+            keccak256(abi.encodePacked(events[eventId].name)) !=
             keccak256(abi.encodePacked(_name))
         ) {
             require(
                 !checkIfEventExists(eventNameToEventId[_name]),
                 "Event already exists"
             );
-            _updateName(_eventId, _name);
+            _updateName(eventId, _name);
         }
         if (
-            keccak256(abi.encodePacked(events[_eventId].description)) !=
+            keccak256(abi.encodePacked(events[eventId].description)) !=
             keccak256(abi.encodePacked(_description))
         ) {
-            _updateDescription(_eventId, _description);
+            _updateDescription(eventId, _description);
         }
         if (
-            keccak256(abi.encodePacked(events[_eventId].location)) !=
+            keccak256(abi.encodePacked(events[eventId].location)) !=
             keccak256(abi.encodePacked(_location))
         ) {
-            _updateLocation(_eventId, _location);
+            _updateLocation(eventId, _location);
         }
-        if (events[_eventId].date != _date) {
-            _updateDate(_eventId, _date);
+        if (events[eventId].date != _date) {
+            _updateDate(eventId, _date);
         }
     }
 
-    function closeEvent(uint256 _eventId)
+    function closeEvent()
         external
-        eventExists(_eventId, true)
-        eventIsOpen(_eventId)
-        isEventOwner(_eventId, msg.sender)
+        eventExists(userToEventId[msg.sender], true)
     {
-        _closeEvent(_eventId);
+        _closeEvent(userToEventId[msg.sender]);
+    }
+
+    function checkIfEventExists(uint256 _eventId) private view returns (bool) {
+        return _eventId > 0 && _eventId < events.length;
+    }
+
+    function getUserEvent() external view returns (uint256) {
+        return userToEventId[msg.sender];
     }
 }
